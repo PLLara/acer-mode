@@ -1,0 +1,90 @@
+[
+  {
+    "name": "ui-mockup.png",
+    "source": "C:\\Users\\pedro\\.codex\\generated_images\\01a112b3-4622-7622-92d4-c291ac92cacc\\exec-2184b912-7f61-441b-ad7a-13a8379c268d.png",
+    "width": 720,
+    "height": 900,
+    "padding": 0,
+    "preserveAspect": false
+  },
+  {
+    "name": "icon.png",
+    "source": "C:\\Users\\pedro\\.codex\\generated_images\\01a112b3-4622-7622-92d4-c291ac92cacc\\exec-475e7d89-80bf-4e28-967e-e46cf678532e.png",
+    "width": 1024,
+    "height": 1024,
+    "padding": 0,
+    "preserveAspect": true
+  },
+  {
+    "name": "btn-idle.png",
+    "source": "C:\\Users\\pedro\\.codex\\generated_images\\01a112b3-4622-7622-92d4-c291ac92cacc\\exec-00819b6e-db32-4ad4-88a8-95ce86ef19b0.png",
+    "width": 1280,
+    "height": 176,
+    "padding": 16,
+    "preserveAspect": false
+  },
+  {
+    "name": "btn-active.png",
+    "source": "C:\\Users\\pedro\\.codex\\generated_images\\01a112b3-4622-7622-92d4-c291ac92cacc\\exec-0835063a-0996-40ee-9ef4-2132281d8fdd.png",
+    "width": 1280,
+    "height": 176,
+    "padding": 16,
+    "preserveAspect": false
+  },
+  {
+    "name": "btn-turbo.png",
+    "source": "C:\\Users\\pedro\\.codex\\generated_images\\01a112b3-4622-7622-92d4-c291ac92cacc\\exec-03bcc2bf-97ac-4989-8a87-84a5d3f8336c.png",
+    "width": 1280,
+    "height": 176,
+    "padding": 16,
+    "preserveAspect": false
+  },
+  {
+    "name": "panel.png",
+    "source": "C:\\Users\\pedro\\.codex\\generated_images\\01a112b3-4622-7622-92d4-c291ac92cacc\\exec-d13d7322-183d-40fa-8517-beea83c12a29.png",
+    "width": 1440,
+    "height": 1800,
+    "padding": 16,
+    "preserveAspect": false
+  },
+  {
+    "name": "titlebar.png",
+    "source": "C:\\Users\\pedro\\.codex\\generated_images\\01a112b3-4622-7622-92d4-c291ac92cacc\\exec-6cbe1158-7ecb-45e8-8f28-376c6f4fed8a.png",
+    "width": 1440,
+    "height": 144,
+    "padding": 16,
+    "preserveAspect": false
+  },
+  {
+    "name": "btn-close.png",
+    "source": "C:\\Users\\pedro\\.codex\\generated_images\\01a112b3-4622-7622-92d4-c291ac92cacc\\exec-a6bab869-f8d1-4715-86cf-1b37bc03c3e2.png",
+    "width": 144,
+    "height": 144,
+    "padding": 16,
+    "preserveAspect": true
+  },
+  {
+    "name": "btn-min.png",
+    "source": "C:\\Users\\pedro\\.codex\\generated_images\\01a112b3-4622-7622-92d4-c291ac92cacc\\exec-316c73a7-bb44-45f5-b1f9-6d9dd0ef988b.png",
+    "width": 144,
+    "height": 144,
+    "padding": 16,
+    "preserveAspect": true
+  },
+  {
+    "name": "toggle-off.png",
+    "source": "C:\\Users\\pedro\\.codex\\generated_images\\01a112b3-4622-7622-92d4-c291ac92cacc\\exec-de464413-3648-4c3f-a1ba-877975602a85.png",
+    "width": 240,
+    "height": 128,
+    "padding": 16,
+    "preserveAspect": true
+  },
+  {
+    "name": "toggle-on.png",
+    "source": "C:\\Users\\pedro\\.codex\\generated_images\\01a112b3-4622-7622-92d4-c291ac92cacc\\exec-94bb11c6-2f8f-47ec-9183-5da0e18139cb.png",
+    "width": 240,
+    "height": 128,
+    "padding": 16,
+    "preserveAspect": true
+  }
+]

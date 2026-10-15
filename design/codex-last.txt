@@ -1,0 +1,17 @@
+Created all 11 PNGs in the current directory using the image generation tool. Verified real alpha transparency for the icon and every component. Component dimensions include padding at 2× scale.
+
+| File | Pixels |
+|---|---:|
+| [icon.png](/C:/Users/pedro/AcerMode/design/icon.png) | 1024×1024 |
+| [ui-mockup.png](/C:/Users/pedro/AcerMode/design/ui-mockup.png) | 720×900 |
+| [btn-idle.png](/C:/Users/pedro/AcerMode/design/btn-idle.png) | 1312×208 |
+| [btn-active.png](/C:/Users/pedro/AcerMode/design/btn-active.png) | 1312×208 |
+| [btn-turbo.png](/C:/Users/pedro/AcerMode/design/btn-turbo.png) | 1312×208 |
+| [panel.png](/C:/Users/pedro/AcerMode/design/panel.png) | 1472×1832 |
+| [titlebar.png](/C:/Users/pedro/AcerMode/design/titlebar.png) | 1472×176 |
+| [btn-close.png](/C:/Users/pedro/AcerMode/design/btn-close.png) | 176×176 |
+| [btn-min.png](/C:/Users/pedro/AcerMode/design/btn-min.png) | 176×176 |
+| [toggle-off.png](/C:/Users/pedro/AcerMode/design/toggle-off.png) | 272×160 |
+| [toggle-on.png](/C:/Users/pedro/AcerMode/design/toggle-on.png) | 272×160 |
+
+Prompt direction: charcoal frosted glass, electric-blue active states, red-orange Turbo, rounded controls, and exact screenshot labels.

@@ -1,0 +1,101 @@
+[
+  {
+    "File": "ui-mockup.png",
+    "Width": 720,
+    "Height": 900,
+    "TransparentPixels": 0,
+    "PartialAlphaPixels": 3236,
+    "OpaquePixels": 644764,
+    "SourceCrop": "0,0,1122,1402"
+  },
+  {
+    "File": "icon.png",
+    "Width": 1024,
+    "Height": 1024,
+    "TransparentPixels": 610027,
+    "PartialAlphaPixels": 436956,
+    "OpaquePixels": 1593,
+    "SourceCrop": "0,0,1254,1254"
+  },
+  {
+    "File": "btn-idle.png",
+    "Width": 1312,
+    "Height": 208,
+    "TransparentPixels": 60877,
+    "PartialAlphaPixels": 210574,
+    "OpaquePixels": 1445,
+    "SourceCrop": "45,223,1894,331"
+  },
+  {
+    "File": "btn-active.png",
+    "Width": 1312,
+    "Height": 208,
+    "TransparentPixels": 54404,
+    "PartialAlphaPixels": 218434,
+    "OpaquePixels": 58,
+    "SourceCrop": "25,223,1935,346"
+  },
+  {
+    "File": "btn-turbo.png",
+    "Width": 1312,
+    "Height": 208,
+    "TransparentPixels": 55357,
+    "PartialAlphaPixels": 216879,
+    "OpaquePixels": 660,
+    "SourceCrop": "36,205,1912,358"
+  },
+  {
+    "File": "panel.png",
+    "Width": 1472,
+    "Height": 1832,
+    "TransparentPixels": 137861,
+    "PartialAlphaPixels": 2551580,
+    "OpaquePixels": 7263,
+    "SourceCrop": "44,45,1035,1311"
+  },
+  {
+    "File": "titlebar.png",
+    "Width": 1472,
+    "Height": 176,
+    "TransparentPixels": 56287,
+    "PartialAlphaPixels": 199740,
+    "OpaquePixels": 3045,
+    "SourceCrop": "24,249,2077,214"
+  },
+  {
+    "File": "btn-close.png",
+    "Width": 176,
+    "Height": 176,
+    "TransparentPixels": 11947,
+    "PartialAlphaPixels": 18542,
+    "OpaquePixels": 487,
+    "SourceCrop": "254,253,746,730"
+  },
+  {
+    "File": "btn-min.png",
+    "Width": 176,
+    "Height": 176,
+    "TransparentPixels": 11902,
+    "PartialAlphaPixels": 18526,
+    "OpaquePixels": 548,
+    "SourceCrop": "276,272,700,687"
+  },
+  {
+    "File": "toggle-off.png",
+    "Width": 272,
+    "Height": 160,
+    "TransparentPixels": 22156,
+    "PartialAlphaPixels": 20798,
+    "OpaquePixels": 566,
+    "SourceCrop": "209,169,1301,535"
+  },
+  {
+    "File": "toggle-on.png",
+    "Width": 272,
+    "Height": 160,
+    "TransparentPixels": 21801,
+    "PartialAlphaPixels": 21153,
+    "OpaquePixels": 566,
+    "SourceCrop": "288,220,1140,474"
+  }
+]

@@ -1,0 +1,15 @@
+# build output
+*.exe
+bin/
+obj/
+.vs/
+*.user
+
+# runtime logs and status written next to the exe
+*.log
+last-status.txt
+
+# graft's local graph cache (regenerable)
+graft/.cache/
+graft/.graph/
+design/**/graft/

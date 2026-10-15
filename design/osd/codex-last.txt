@@ -1,0 +1,13 @@
+Criados no diretório atual com a ferramenta de geração de imagens. Todos têm transparência alfa real, sem texto; os ícones são branco puro.
+
+| Arquivo | Dimensões |
+|---|---|
+| [osd-pill.png](osd-pill.png) | 560 × 152 |
+| [osd-pill-turbo.png](osd-pill-turbo.png) | 560 × 152 |
+| [mode-quiet.png](mode-quiet.png) | 256 × 256 |
+| [mode-balanced.png](mode-balanced.png) | 256 × 256 |
+| [mode-performance.png](mode-performance.png) | 256 × 256 |
+| [mode-turbo.png](mode-turbo.png) | 256 × 256 |
+| [mode-eco.png](mode-eco.png) | 256 × 256 |
+
+[Prompts utilizados](osd-generation-prompts.txt).

@@ -1,0 +1,20 @@
+You have an image generation tool. Use it (do not draw with code, do not use PIL/SVG for the art itself). The attached screenshot is the current, ugly UI of "Acer Mode", a small Windows utility that switches a gaming laptop's thermal profile. It has 5 mode buttons (Quiet, Balanced, Performance, Turbo, Eco), a title, a status line "Ativo agora: Balanced" and a checkbox "Iniciar com o Windows".
+
+Redesign it as a beautiful, modern, premium gaming-utility UI. Style: dark charcoal/near-black base, subtle glass/frosted panels, soft inner glow, crisp rounded corners, electric blue as the normal accent and hot red/orange for Turbo. Clean, readable, not cluttered. Keep every label in Portuguese exactly as in the screenshot.
+
+Create these files in the current directory, each generated with the image generation tool, each a PNG:
+
+1. icon.png  - the app icon: a bold stylized lightning bolt / thermal-gauge emblem in a rounded badge, neon blue with red-orange hot edge. 1024x1024. TRANSPARENT background (true alpha, no background, no shadow box, no checkerboard).
+2. ui-mockup.png - the full redesigned window, portrait, about 720x900, including a custom title bar (it will REPLACE the default Windows title bar), the title "Modo do notebook", the 5 mode buttons with Balanced shown as the active one, the status line and the startup toggle.
+3. Separate UI components, one PNG each, all with TRANSPARENT background (true alpha, nothing behind them), same visual style as the mockup, drawn at 2x scale, centered with a little padding so they can be cropped:
+   - btn-idle.png        (a mode button, inactive, wide pill ~640x88, NO text on it)
+   - btn-active.png      (the same button, active, blue glow, NO text)
+   - btn-turbo.png       (the same button, active, hot red/orange glow, NO text)
+   - panel.png           (the window body/panel surface, rounded corners, subtle glass, ~720x900, no content)
+   - titlebar.png        (custom title bar strip, ~720x72, no text, no buttons)
+   - btn-close.png       (round or square close button with an X, ~72x72)
+   - btn-min.png         (minimize button with a dash, ~72x72)
+   - toggle-off.png      (switch toggle in the OFF state, ~120x64)
+   - toggle-on.png       (switch toggle in the ON state, blue, ~120x64)
+
+Hard requirements: the component PNGs and the icon must have a real transparent background (alpha channel). Do not put text on the buttons. Save every file in the current directory with exactly those filenames. When done, list the files you created with their pixel dimensions.

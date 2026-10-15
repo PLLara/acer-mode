@@ -1,0 +1,14 @@
+You have an image generation tool. Use it (do not draw the art with code, PIL or SVG). Two reference screenshots are attached: "new-ui.png" is the finished, polished Acer Mode window, and "osd-turbo.png" is a rough placeholder of a small on-screen notification that appears for 1.5 seconds when the laptop's performance mode changes. The placeholder is ugly and hand-drawn. Redo the notification with exactly the same premium look as the window: dark charcoal frosted-glass, crisp rounded edge, electric-blue accent, hot red-orange accent for Turbo, soft glow, same icon style as the window's mode buttons.
+
+Create these PNG files in the current directory, each generated with the image generation tool, ALL with a real TRANSPARENT background (true alpha channel, nothing behind them, no checkerboard, no box):
+
+1. osd-pill.png        - the notification background only: a wide rounded pill/card, about 560x152 pixels, frosted dark glass with an electric-blue glowing edge. NO text and NO icon on it. Leave the left part visually calm so an icon can sit there, and the right part clean for text. Small even padding of transparent pixels around it for the glow.
+2. osd-pill-turbo.png  - exactly the same shape, size, and layout as osd-pill.png but with a hot red-orange glowing edge.
+3. Five mode icons, each a single clean glyph, 256x256, centered, transparent background, PURE WHITE (so the app can tint them), crisp with no outer glow, no background shape, no text. Modern rounded-stroke style, consistent weight and size across the set:
+   - mode-quiet.png        a crescent moon
+   - mode-balanced.png     a balance scale
+   - mode-performance.png  a speedometer / gauge with needle
+   - mode-turbo.png        a lightning bolt
+   - mode-eco.png          a leaf
+
+Hard requirements: transparent backgrounds with real alpha on all seven files, exact filenames above, no text on any file. When done, list the files with their pixel dimensions.

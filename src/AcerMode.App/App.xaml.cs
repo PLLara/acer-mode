@@ -48,7 +48,10 @@ public partial class App : Application
         AccentManager.Install(Resources);
         var args = e.Args;
 
-        int? cliCode = await Cli.TryRunAsync(args);
+        // Comandos sem janela sempre terminam o processo, mesmo quando falham.
+        int? cliCode;
+        try { cliCode = await Cli.TryRunAsync(args); }
+        catch (Exception ex) { WriteCrash(ex); Shutdown(1); return; }
         if (cliCode is { } code) { Shutdown(code); return; }
 
         bool demo = args.Contains("--demo");

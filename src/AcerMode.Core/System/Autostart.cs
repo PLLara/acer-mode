@@ -40,6 +40,22 @@ public static class Autostart
         if (code != 0) throw new InvalidOperationException(o.Trim());
     }
 
-    // O exe novo pode morar em outro caminho: se a tarefa existe, recria apontando para cá.
-    public static void Refresh(string exePath) { if (IsOn()) Set(true, exePath); }
+    // Só reaponta a tarefa quando o exe dela sumiu. Rodar um build de desenvolvimento
+    // uma vez não pode roubar o início com o Windows do exe publicado.
+    public static void Refresh(string exePath)
+    {
+        if (Run("/Query /TN " + TaskName + " /XML", out var xml) != 0) return;
+        if (ShouldRefresh(ParseCommand(xml), exePath, File.Exists)) Set(true, exePath);
+    }
+
+    public static string? ParseCommand(string taskXml)
+    {
+        var m = System.Text.RegularExpressions.Regex.Match(taskXml, "<Command>(.*?)</Command>");
+        return m.Success ? System.Net.WebUtility.HtmlDecode(m.Groups[1].Value.Trim().Trim('"')) : null;
+    }
+
+    public static bool ShouldRefresh(string? currentTarget, string exePath, Func<string, bool> exists) =>
+        currentTarget is not null
+        && !string.Equals(currentTarget, exePath, StringComparison.OrdinalIgnoreCase)
+        && !exists(currentTarget);
 }

@@ -39,7 +39,7 @@ public static class Cli
                 var dir = SettingsStore.DefaultDirectory;
                 var (settings, _) = new SettingsStore(Path.Combine(dir, "settings.json")).Load();
                 var svc = new ModeService(hw, () => settings, new DirtyMarker(Path.Combine(dir, "fans-dirty")));
-                await svc.ApplyModeAsync(mode);
+                await svc.ApplyModeAsync(mode, applyFans: false);   // sem o app aberto, nada vigiaria um Personalizado
             }
             int cur = await hw.GetModeCodeAsync();
             File.WriteAllText(file, "Profile: " + (ThermalModes.IsKnown(cur) ? ((ThermalMode)cur).ToString() : "desconhecido (" + cur + ")"));

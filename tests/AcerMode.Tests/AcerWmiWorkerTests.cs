@@ -21,6 +21,25 @@ public class AcerWmiWorkerTests
     }
 
     [Fact]
+    public async Task TimedOutAction_DoesNotRunItsRemainingSteps()
+    {
+        using var w = new SerialWorker(() => 0, backoffMs: 0);
+        var release = new ManualResetEventSlim(false);
+        var stepTwoRan = new ManualResetEventSlim(false);
+
+        await Assert.ThrowsAsync<HardwareException>(() => w.Run(() =>
+        {
+            release.Wait();                      // primeira chamada à BIOS travada
+            SerialWorker.ThrowIfAbandoned();     // antes da segunda chamada
+            stepTwoRan.Set();
+            return 0;
+        }, TimeSpan.FromMilliseconds(100)));
+
+        release.Set();
+        Assert.False(stepTwoRan.Wait(300));
+    }
+
+    [Fact]
     public async Task CallsAreSerialized()
     {
         using var w = new SerialWorker(() => 0, backoffMs: 30_000);

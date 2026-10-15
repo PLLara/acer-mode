@@ -14,7 +14,7 @@ public sealed partial class LightingViewModel : ObservableObject
 {
     readonly AppState state;
     readonly DispatcherTimer liveTimer;
-    readonly LatestWins<LightingProfile> live;
+    readonly LatestWins<(LightingProfile Profile, ThermalMode? For)> live;
     bool loading, writing, followActive = true;
 
     public LightingViewModel(AppState state)
@@ -23,10 +23,16 @@ public sealed partial class LightingViewModel : ObservableObject
         Effects = KbEffects.Supported.Select(e => new EffectOption(e, KbEffects.Label(e))).ToArray();
         editingMode = state.ActiveMode ?? ThermalMode.Balanced;
 
-        live = new LatestWins<LightingProfile>(p => state.Modes.PreviewLightingAsync(p));
+        // A prévia leva o modo do perfil editado; o ModeService a descarta se o botão físico
+        // trocou o modo nesse meio-tempo.
+        live = new LatestWins<(LightingProfile Profile, ThermalMode? For)>(x => state.Modes.PreviewLightingAsync(x.Profile, x.For));
         live.Error += ex => AppState.Ui(() => state.Banner = AppState.Friendly(ex));
         liveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(120) };
-        liveTimer.Tick += (_, _) => { liveTimer.Stop(); if (IsLive) _ = live.PostAsync(Profile); };
+        liveTimer.Tick += (_, _) =>
+        {
+            liveTimer.Stop();
+            if (IsLive) _ = live.PostAsync((Profile, state.Settings.IndependentLighting ? null : EditingMode));
+        };
 
         state.ModeApplied += m =>
         {

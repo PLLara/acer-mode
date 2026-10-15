@@ -14,6 +14,16 @@ public sealed class SerialWorker : IDisposable
     BlockingCollection<Action> queue = null!;
     long failUntil = long.MinValue;
 
+    // Marca da ação em execução nesta thread; vira true quando a ação passa do limite.
+    [ThreadStatic] static System.Runtime.CompilerServices.StrongBox<bool>? current;
+
+    // Chamada antes de cada acesso à BIOS: uma ação abandonada por timeout não continua
+    // escrevendo depois que a BIOS volta (nem em paralelo com o worker novo).
+    public static void ThrowIfAbandoned()
+    {
+        if (current?.Value == true) throw new HardwareException("Chamada à BIOS abandonada depois do limite de tempo.");
+    }
+
     public SerialWorker(Func<long>? clock = null, long backoffMs = 30_000)
     {
         now = clock ?? (() => Environment.TickCount64);
@@ -38,15 +48,19 @@ public sealed class SerialWorker : IDisposable
             q = queue;
         }
         var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var abandoned = new System.Runtime.CompilerServices.StrongBox<bool>(false);
         q.Add(() =>
         {
             if (tcs.Task.IsCompleted) return;
+            current = abandoned;
             try { tcs.TrySetResult(f()); }
             catch (HardwareException ex) { tcs.TrySetException(ex); }
             catch (Exception ex) { tcs.TrySetException(new HardwareException(ex.Message)); }
+            finally { current = null; }
         });
         if (await Task.WhenAny(tcs.Task, Task.Delay(timeout)) != tcs.Task)
         {
+            abandoned.Value = true;
             lock (gate)
             {
                 failUntil = now() + backoffMs;
@@ -76,6 +90,7 @@ public sealed class AcerWmi : IAcerHardware, IDisposable
 
     ulong Call(string method, object input)
     {
+        SerialWorker.ThrowIfAbandoned();
         try
         {
             var o = Obj();

@@ -48,7 +48,8 @@ public sealed partial class ModesViewModel : ObservableObject
     public Geometry? ActiveIcon => state.ActiveMode is { } m ? Application.Current?.TryFindResource("Icon." + m) as Geometry : null;
     public SensorReading? Telemetry => state.Latest;
 
-    [RelayCommand]
+    // Cliques durante uma troca em andamento não podem ser ignorados: LatestWins coalesce.
+    [RelayCommand(AllowConcurrentExecutions = true)]
     Task Select(ThermalMode mode) => state.SelectModeAsync(mode);
 
     void Refresh()

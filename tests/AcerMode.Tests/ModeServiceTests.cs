@@ -62,6 +62,50 @@ public class ModeServiceTests
     }
 
     [Fact]
+    public async Task CustomWriteAndRevertBothFail_KeepsGuardArmed()
+    {
+        // A escrita pode ter chegado à BIOS mesmo falhando aqui: trata como Personalizado.
+        settings.Profile(ThermalMode.Turbo).Fans = new FanSettings(FanMode.Custom, 50, 50);
+        hw.FailOn = op => op == "fans";
+        var svc = Svc();
+        await svc.ApplyModeAsync(ThermalMode.Turbo);
+        Assert.Equal(FanMode.Custom, svc.ActiveFans.Mode);
+        Assert.True(dirty.Exists);
+    }
+
+    [Fact]
+    public async Task ApplyWithoutFans_LeavesFansUntouched()
+    {
+        settings.Profile(ThermalMode.Turbo).Fans = new FanSettings(FanMode.Custom, 50, 50);
+        await Svc().ApplyModeAsync(ThermalMode.Turbo, applyFans: false);
+        Assert.DoesNotContain(hw.Calls, c => c.StartsWith("fans"));
+        Assert.False(dirty.Exists);
+    }
+
+    [Fact]
+    public async Task PreviewForAnotherMode_IsDroppedOnceTargetChanged()
+    {
+        var svc = Svc();
+        await svc.ApplyModeAsync(ThermalMode.Balanced);
+        hw.Delay = TimeSpan.FromMilliseconds(40);
+        var toTurbo = svc.ApplyModeAsync(ThermalMode.Turbo);              // botão físico no meio da edição
+        bool sent = await svc.PreviewLightingAsync(LightingProfile.Solid(new Rgb(1, 2, 3), 100), ThermalMode.Balanced);
+        await toTurbo;
+        Assert.False(sent);
+        Assert.Equal(new Rgb(255, 45, 10), hw.Lighting!.Zones[0]);
+    }
+
+    [Fact]
+    public async Task PreviewForTargetMode_IsSent()
+    {
+        var svc = Svc();
+        await svc.ApplyModeAsync(ThermalMode.Eco);
+        Assert.True(await svc.PreviewLightingAsync(LightingProfile.Solid(new Rgb(1, 2, 3), 100), ThermalMode.Eco));
+        Assert.True(await svc.PreviewLightingAsync(LightingProfile.Solid(new Rgb(4, 5, 6), 100), null));   // iluminação independente
+        Assert.Equal(new Rgb(4, 5, 6), hw.Lighting!.Zones[0]);
+    }
+
+    [Fact]
     public async Task ToggleTurbo_GoesAndComesBack()
     {
         var svc = Svc();

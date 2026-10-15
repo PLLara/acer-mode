@@ -65,6 +65,23 @@ public partial class App : Application
         instance = new SingleInstance(demo ? "AcerModeDemo" : "AcerModeSingle");
         if (!instance.IsFirst) { instance.SignalFirst(); Shutdown(); return; }
 
+        // Uma falha na partida não pode deixar um processo invisível segurando a instância
+        // única (cada abertura seguinte só "sinalizaria" o morto): registra e encerra.
+        try { await StartAsync(args, demo); }
+        catch (Exception ex)
+        {
+            WriteCrash(ex);
+            ReallyExiting = true;
+            tray?.Dispose();
+            tray = null;
+            instance.Dispose();
+            instance = null;
+            Shutdown(1);
+        }
+    }
+
+    async Task StartAsync(string[] args, bool demo)
+    {
         hardware = demo ? new FakeHardware() : new AcerWmi();
         comp = await Composition.CreateAsync(hardware, demo);
         var state = comp.State;
@@ -117,7 +134,7 @@ public partial class App : Application
             tray.UpdateIcon(m);
             if (state.Settings.ShowOsd) osd.Flash(m);
         };
-        instance.Listen(() => Dispatcher.BeginInvoke(ShowShell));
+        instance!.Listen(() => Dispatcher.BeginInvoke(ShowShell));
         if (!args.Contains("--tray")) ShowShell();
     }
 

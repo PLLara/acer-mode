@@ -18,6 +18,9 @@ public sealed class ModeService
     }
 
     public ThermalMode? Active { get; private set; }
+
+    // Modo para onde o app está indo: muda no início da transação, antes de Active.
+    public ThermalMode? Target { get; private set; }
     public FanSettings ActiveFans { get; private set; } = new();
     public event Action<ThermalMode>? ModeChanged;
 
@@ -25,15 +28,21 @@ public sealed class ModeService
     {
         int code = await hw.GetModeCodeAsync();
         Active = ThermalModes.IsKnown(code) ? (ThermalMode)code : null;
+        Target = Active;
         return Active;
     }
 
-    public async Task<ModeChangeResult> ApplyModeAsync(ThermalMode mode)
+    // applyFans = false no --set da linha de comando: sem o app aberto, nada vigiaria um
+    // Personalizado (FanGuard).
+    public async Task<ModeChangeResult> ApplyModeAsync(ThermalMode mode, bool applyFans = true)
     {
-        await hw.SetModeAsync(mode);
+        var previous = Target;
+        Target = mode;
+        try { await hw.SetModeAsync(mode); }
+        catch { Target = previous; throw; }
         Active = mode;
         log?.Write("modo -> " + mode);
-        var warnings = await ApplyProfileAsync(mode);
+        var warnings = await ApplyProfileAsync(mode, applyFans);
         ModeChanged?.Invoke(mode);
         return new ModeChangeResult(mode, warnings);
     }
@@ -47,7 +56,14 @@ public sealed class ModeService
         return await ApplyModeAsync(ThermalMode.Turbo);
     }
 
-    public Task PreviewLightingAsync(LightingProfile p) => hw.ApplyLightingAsync(p);
+    // Prévia do editor. forMode = perfil editado (null quando a iluminação é independente);
+    // se o modo-alvo mudou nesse meio-tempo (botão físico), a prévia é descartada.
+    public async Task<bool> PreviewLightingAsync(LightingProfile p, ThermalMode? forMode)
+    {
+        if (forMode is { } m && Target != m) return false;
+        await hw.ApplyLightingAsync(p);
+        return true;
+    }
 
     public async Task<IReadOnlyList<string>> ApplyFansAsync(FanSettings fans)
     {
@@ -79,13 +95,13 @@ public sealed class ModeService
         return mode is { } m ? await ApplyProfileAsync(m) : Array.Empty<string>();
     }
 
-    async Task<IReadOnlyList<string>> ApplyProfileAsync(ThermalMode mode)
+    async Task<IReadOnlyList<string>> ApplyProfileAsync(ThermalMode mode, bool applyFans = true)
     {
         var s = settings();
         var warnings = new List<string>();
         try { await hw.ApplyLightingAsync(s.LightingFor(mode)); }
         catch (Exception ex) { warnings.Add("Iluminação: " + ex.Message); log?.Write("ERRO iluminação: " + ex.Message); }
-        await ApplyFansCoreAsync(s.Profile(mode).Fans, warnings);
+        if (applyFans) await ApplyFansCoreAsync(s.Profile(mode).Fans, warnings);
         return warnings;
     }
 
@@ -103,7 +119,13 @@ public sealed class ModeService
             warnings.Add("Ventoinhas: " + ex.Message + " Voltando ao automático.");
             log?.Write("ERRO ventoinhas: " + ex.Message);
             try { await RevertFansToAutoAsync(); }
-            catch (Exception ex2) { log?.Write("ERRO ao voltar ventoinhas: " + ex2.Message); }
+            catch (Exception ex2)
+            {
+                // A escrita do Personalizado pode ter chegado à BIOS: mantém o FanGuard armado
+                // (e o marcador em disco) até um Auto ser confirmado.
+                log?.Write("ERRO ao voltar ventoinhas: " + ex2.Message);
+                if (fans.Mode == FanMode.Custom) ActiveFans = fans;
+            }
         }
     }
 }

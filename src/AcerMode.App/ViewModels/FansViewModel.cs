@@ -16,7 +16,7 @@ public sealed partial class FanModeOption(FanMode mode, string label) : Observab
 public sealed partial class FansViewModel : ObservableObject
 {
     readonly AppState state;
-    readonly LatestWins<FanSettings> writer;
+    readonly LatestWins<(FanSettings Fans, ThermalMode For)> writer;
     readonly DispatcherTimer debounce;
     bool loading, followActive = true;
 
@@ -31,14 +31,19 @@ public sealed partial class FansViewModel : ObservableObject
             new FanModeOption(FanMode.Custom, "Personalizado"),
         };
 
-        writer = new LatestWins<FanSettings>(async f =>
+        writer = new LatestWins<(FanSettings Fans, ThermalMode For)>(async x =>
         {
-            var w = await state.Modes.ApplyFansAsync(f);
+            if (state.Modes.Target != x.For) return;   // o modo mudou (botão físico): o perfil novo já valeu
+            var w = await state.Modes.ApplyFansAsync(x.Fans);
             if (w.Count > 0) AppState.Ui(() => state.Banner = string.Join(" ", w));
         });
         writer.Error += ex => AppState.Ui(() => state.Banner = AppState.Friendly(ex));
         debounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
-        debounce.Tick += (_, _) => { debounce.Stop(); if (IsLive) _ = writer.PostAsync(state.Settings.Profile(EditingMode).Fans); };
+        debounce.Tick += (_, _) =>
+        {
+            debounce.Stop();
+            if (IsLive) _ = writer.PostAsync((state.Settings.Profile(EditingMode).Fans, EditingMode));
+        };
 
         state.PropertyChanged += (_, e) =>
         {

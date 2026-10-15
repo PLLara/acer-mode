@@ -38,6 +38,17 @@ public static class Shots
         Size size;
         switch (target)
         {
+            case "flyout":
+                var f = new TrayFlyout(comp.Vm, _ => { });
+                root = f.RootElement;
+                size = new Size(f.Width, f.Height);
+                break;
+            case "osd":
+                var o = new OsdWindow();
+                o.SetMode(mode);
+                root = o.RootElement;
+                size = new Size(o.Width, o.Height);
+                break;
             default:
                 var w = new ShellWindow(comp.Vm);
                 w.Navigate(target);

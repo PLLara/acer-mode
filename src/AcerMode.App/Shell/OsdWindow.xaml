@@ -1,0 +1,33 @@
+<Window x:Class="AcerMode.App.Shell.OsdWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="clr-namespace:AcerMode.App.Controls"
+        Title="Acer Mode OSD" Width="340" Height="120" WindowStyle="None" AllowsTransparency="True"
+        Background="Transparent" Topmost="True" ShowInTaskbar="False" ShowActivated="False" Focusable="False"
+        ResizeMode="NoResize" TextElement.FontFamily="{StaticResource UiFont}" TextElement.Foreground="{StaticResource Text1Brush}">
+    <Grid x:Name="Root" RenderTransformOrigin="0.5,0.5" Margin="20">
+        <Grid.RenderTransform>
+            <TransformGroup>
+                <ScaleTransform x:Name="Scale"/>
+                <TranslateTransform x:Name="Shift"/>
+            </TransformGroup>
+        </Grid.RenderTransform>
+        <!-- anel de brilho na cor do modo -->
+        <Border x:Name="Ring" CornerRadius="40" BorderThickness="1.5">
+            <Border.Effect>
+                <DropShadowEffect x:Name="Glow" ShadowDepth="0" BlurRadius="24" Opacity="0.7"/>
+            </Border.Effect>
+        </Border>
+        <Border CornerRadius="40" Background="#EB12151C" BorderBrush="#24FFFFFF" BorderThickness="1" Padding="12,0,28,0">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Border x:Name="IconBadge" Width="52" Height="52" CornerRadius="26">
+                    <c:Icon x:Name="ModeIcon" Width="26" Height="26" StrokeThickness="2"/>
+                </Border>
+                <StackPanel Margin="16,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="MODO ATIVO" FontSize="11" Foreground="{StaticResource Text2Brush}"/>
+                    <TextBlock x:Name="ModeName" FontFamily="{StaticResource DisplayFont}" FontSize="26" FontWeight="SemiBold" Margin="0,-3,0,0"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

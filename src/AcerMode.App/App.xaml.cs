@@ -13,12 +13,16 @@ public partial class App : Application
 {
     public static bool ReallyExiting { get; private set; }
     public static bool FlyoutVisible { get; set; }
+    public static bool ShellVisible { get; set; }
 
     SingleInstance? instance;
     IAcerHardware? hardware;
     HardwareKey? key;
     Composition? comp;
     ShellWindow? shell;
+    TrayFlyout? flyout;
+    OsdWindow? osd;
+    Tray? tray;
 
     public App()
     {
@@ -96,6 +100,20 @@ public partial class App : Application
         state.Sensors.Start();
 
         shell = new ShellWindow(comp.Vm);
+        flyout = new TrayFlyout(comp.Vm, page => { ShowShell(); shell.Navigate(page); });
+        osd = new OsdWindow();
+        tray = new Tray(state, () => flyout.Toggle(), ShowShell, ExitApp,
+            getAutostart: () => { try { return Autostart.IsOn(); } catch (Exception) { return false; } },
+            setAutostart: on =>
+            {
+                try { Autostart.Set(on, Environment.ProcessPath!); }
+                catch (Exception ex) { state.Banner = "Não foi possível mudar o início com o Windows: " + ex.Message; }
+            });
+        state.ModeApplied += m =>
+        {
+            tray.UpdateIcon(m);
+            if (state.Settings.ShowOsd) osd.Flash(m);
+        };
         instance.Listen(() => Dispatcher.BeginInvoke(ShowShell));
         if (!args.Contains("--tray")) ShowShell();
     }
@@ -129,6 +147,7 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         SystemEvents.PowerModeChanged -= OnPower;
+        tray?.Dispose();
         key?.Dispose();
         comp?.State.Sensors.Dispose();
         (hardware as IDisposable)?.Dispose();

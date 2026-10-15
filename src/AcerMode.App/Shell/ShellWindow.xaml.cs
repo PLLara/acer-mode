@@ -35,7 +35,11 @@ public partial class ShellWindow : Window
         CloseButton.Click += (_, _) => HideAnimated();
         BannerClose.Click += (_, _) => vm.State.Banner = null;
         vm.State.PropertyChanged += OnState;
-        IsVisibleChanged += (_, _) => vm.State.Sensors.UiVisible = IsVisible || App.FlyoutVisible;
+        IsVisibleChanged += (_, _) =>
+        {
+            App.ShellVisible = IsVisible;
+            vm.State.Sensors.UiVisible = IsVisible || App.FlyoutVisible;
+        };
         Loaded += (_, _) => MoveIndicator(animate: false);
 
         Navigate("modos");

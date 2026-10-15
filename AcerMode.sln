@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9A34E363-B79E-4714-BFF6-B751178064F0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AcerMode.Core", "src\AcerMode.Core\AcerMode.Core.csproj", "{477FDB3D-8D8E-4B4F-A7B2-D00EF2521C08}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{9F4A11BE-5F1C-4D02-A7C0-69E85930D82F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AcerMode.Tests", "tests\AcerMode.Tests\AcerMode.Tests.csproj", "{E5DB8349-C9AE-4B5B-BE86-05C2341A1A8D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{477FDB3D-8D8E-4B4F-A7B2-D00EF2521C08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{477FDB3D-8D8E-4B4F-A7B2-D00EF2521C08}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{477FDB3D-8D8E-4B4F-A7B2-D00EF2521C08}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{477FDB3D-8D8E-4B4F-A7B2-D00EF2521C08}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5DB8349-C9AE-4B5B-BE86-05C2341A1A8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5DB8349-C9AE-4B5B-BE86-05C2341A1A8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5DB8349-C9AE-4B5B-BE86-05C2341A1A8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5DB8349-C9AE-4B5B-BE86-05C2341A1A8D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{477FDB3D-8D8E-4B4F-A7B2-D00EF2521C08} = {9A34E363-B79E-4714-BFF6-B751178064F0}
+		{E5DB8349-C9AE-4B5B-BE86-05C2341A1A8D} = {9F4A11BE-5F1C-4D02-A7C0-69E85930D82F}
+	EndGlobalSection
+EndGlobal

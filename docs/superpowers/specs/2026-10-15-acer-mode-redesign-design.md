@@ -40,8 +40,11 @@ bandeja, iniciar com o Windows, CLI).
 
 ## 3. Protocolo de hardware
 
-Toda a comunicação é pela classe WMI `root\WMI:AcerGamingFunction`. O app exige
-administrador (`app.manifest`, `requireAdministrator`), como hoje.
+Toda a comunicação é pela classe WMI `root\WMI:AcerGamingFunction`, que exige
+administrador (sem elevação, `Get-CimInstance` devolve “Acesso negado”). O manifesto passa a
+ser `asInvoker` e o app se relança elevado (`runas`) quando precisa do hardware. Assim
+`--demo` e `--shot` rodam sem UAC. A tarefa agendada já roda com privilégio máximo,
+então o autostart não mostra UAC.
 
 ### 3.1 Confirmado no PHN16-72 (em uso no app atual)
 
@@ -54,8 +57,24 @@ administrador (`app.manifest`, `requireAdministrator`), como hoje.
 | Efeito/brilho | `SetGamingKBBacklight(gmInput = byte[16])` | `[efeito, velocidade, brilho, 0, direção, R, G, B, 3, 1, 0…]`; `3` = motor de 4 zonas |
 | Botão físico | evento `APGeEvent` | `EventDetail` começando com `07 05 01` |
 
+**Confirmado por leitura em 2026-10-15** (probe somente leitura, elevado, modo Turbo):
+
+| Função | Chamada | Formato | Leitura de exemplo |
+|---|---|---|---|
+| Sensor | `GetGamingSysInfo(gmInput = 0x01 \| sensor << 8)` | status = `out & 0xFF`; valor = `(out >> 8) & 0xFFFF` | — |
+| Sensores | ids `0x01` CPU °C, `0x02` ventoinha CPU rpm, `0x03` sistema °C, `0x06` ventoinha GPU rpm, `0x0A` GPU °C | — | 85 °C, 3750 rpm, 54 °C, 3333 rpm, 67 °C |
+| Comportamento das ventoinhas | `GetGamingFanBehavior(0x09)` | `d = out >> 8`; CPU = `d & 3`, GPU = `(d >> 6) & 3` | `0x4100` → CPU 1, GPU 1 (Auto) |
+| % personalizado | `GetGamingFanSpeed(fan)`, fan `0x01` CPU, `0x04` GPU | `% = (out >> 8) & 0xFF` | CPU 70 %, GPU 60 % |
+| Cor de zona | `GetGamingRgbKb(zona)` | `R = out >> 8`, `G = out >> 16`, `B = out >> 24` | `#FF2D0A` nas 4 zonas |
+
+O comando de sensor `0x02` (usado por drivers de outros modelos) **não** funciona aqui:
+devolve zero para todos os ids. A escrita de ventoinha segue o formato espelhado da
+leitura: `SetGamingFanBehavior(0x09 | cpuModo << 16 | gpuModo << 22)` com Auto `1`,
+Máximo `2`, Personalizado `3`, e `SetGamingFanSpeed(fan | % << 8)`. A escrita ainda é
+verificada na Fase 0 com leitura de volta.
+
 O efeito `0` (estático) com cores por zona é o único comportamento de iluminação já
-validado. Os eventos `08 …` e `09 …` também chegam pelo `APGeEvent` e hoje são ignorados.
+validado por escrita. Os eventos `08 …` e `09 …` também chegam pelo `APGeEvent` e hoje são ignorados.
 Não se sabe o que significam, e eles continuam ignorados (o novo log de eventos registra
 cada um para investigação futura).
 
@@ -67,11 +86,7 @@ verificados neste notebook:
 - **Efeitos** no byte 0 de `SetGamingKBBacklight`: estático, respirar, neon, onda,
   alternar, zoom, meteoro, cintilar (códigos `0–7`); velocidade `0–9`; brilho `0–100`;
   direção `1`/`2`. Efeitos animados usam uma cor única (ou arco-íris, conforme o efeito).
-- **Sensores** em `GetGamingSysInfo`: temperatura de CPU e GPU e RPM das duas ventoinhas,
-  cada um selecionado por um código no `gmInput`.
-- **Ventoinhas**: `SetGamingFanBehavior` escolhe Auto / Máximo / Personalizado por
-  ventoinha (CPU e GPU), e `SetGamingFanSpeed` define o % no modo Personalizado;
-  `Get*` correspondentes leem o estado.
+- **Escrita de ventoinhas** no formato da §3.1 (a leitura já está confirmada).
 
 **Regra:** o que a Fase 0 não confirmar fica **oculto** na interface. Não se entrega
 controle meio funcionando.
@@ -103,7 +118,7 @@ Cada unidade tem uma responsabilidade e é testável sem o notebook.
 | `Encoders` | Funções **puras** domínio ↔ payload: modo, cor por zona, `byte[16]` de efeito, comportamento/% de ventoinha, parsing de sensores | — |
 | `Profiles` | Carrega, valida, migra e salva `settings.json`; produz os padrões (as cores atuais por modo) | `System.Text.Json` |
 | `FanGuard` | Regras de segurança das ventoinhas (§7.2); recebe leituras, devolve ações | — |
-| `Sensors` | Faz polling de 1 s **apenas** enquanto janela ou flyout estiverem visíveis; expõe as últimas 120 amostras | `IAcerHardware` |
+| `Sensors` | Polling a cada 1 s com janela ou flyout visíveis; a cada 3 s escondido **se** alguma ventoinha estiver em Personalizado (o `FanGuard` precisa de leitura); parado nos demais casos. Expõe as últimas 120 amostras | `IAcerHardware` |
 | `HardwareKey` | Watcher do `APGeEvent`, com debounce de 600 ms (lógica atual) | `System.Management` |
 | `Autostart` | Tarefa agendada no logon, igual à atual (inclusive rodar na bateria) | `schtasks.exe` |
 | `EventLog` | Log rotativo em `%APPDATA%\AcerMode\events.log` (substitui o `key.log` ao lado do exe) | — |
@@ -214,7 +229,8 @@ Linguagem única: 150–250 ms, ease-out; molas só onde algo “pousa”.
 | OSD | mesmo pop/fade atual, redesenhado em vetor com anel na cor do modo |
 
 - Com “Mostrar animações” desligado no Windows, tudo vira fade instantâneo.
-- Animações só rodam com algo visível. Na bandeja, CPU ~0 % e polling de sensores parado.
+- Animações só rodam com algo visível. Na bandeja, CPU ~0 % e polling de sensores parado
+  (exceto o polling de 3 s do `FanGuard` com ventoinha em Personalizado).
 
 ## 7. Erros e segurança
 

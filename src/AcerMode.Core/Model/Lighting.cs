@@ -6,6 +6,9 @@ public enum KbDirection : byte { RightToLeft = 1, LeftToRight = 2 }
 public static class KbEffects
 {
     public static readonly KbEffect[] All = Enum.GetValues<KbEffect>();
+
+    // Efeitos que a BIOS do PHN16-72 aceitou na verificação de escrita (spec §3.1).
+    public static readonly KbEffect[] Supported = All;
     public static bool UsesZones(KbEffect e) => e == KbEffect.Static;
     public static bool UsesColor(KbEffect e) => e is KbEffect.Breathing or KbEffect.Shifting or KbEffect.Zoom or KbEffect.Meteor or KbEffect.Twinkling;
     public static bool UsesSpeed(KbEffect e) => e != KbEffect.Static;

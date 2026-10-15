@@ -1,0 +1,16 @@
+14:43:37.026 modo atual: 5
+14:43:37.597 efeito 0 (Static): status 0
+14:43:40.633 efeito 1 (Breathing): status 0
+14:43:43.673 efeito 2 (Neon): status 0
+14:43:46.702 efeito 3 (Wave): status 0
+14:43:49.742 efeito 4 (Shifting): status 0
+14:43:52.776 efeito 5 (Zoom): status 0
+14:43:55.824 efeito 6 (Meteor): status 0
+14:43:58.856 efeito 7 (Twinkling): status 0
+14:44:02.008 ventoinhas antes: 0x4100 | CPU 100C GPU 89C rpm 4761/4000
+14:44:02.065 Max: status 0, leitura 0x8200
+14:44:07.164 Max depois de 5 s: CPU 96C GPU 84C rpm 7692/7142
+14:44:07.278 Custom 60/60: speed 0/0, behavior 0, leitura 0xC300, % 0x3C00/0x3C00
+14:44:12.396 Custom depois de 5 s: CPU 95C GPU 86C rpm 6382/6000
+14:44:12.452 Auto: status 0, leitura 0x4100
+14:44:12.588 iluminação restaurada: status 0

@@ -63,6 +63,13 @@ public class EncodersTests
     }
 
     [Fact]
+    public void Supported_HasAllEightConfirmedEffects()
+    {
+        Assert.Contains(KbEffect.Static, KbEffects.Supported);
+        Assert.Equal(8, KbEffects.Supported.Length);
+    }
+
+    [Fact]
     public void IsModeKeyEvent()
     {
         Assert.True(Encoders.IsModeKeyEvent(new byte[] { 7, 5, 1, 0 }));

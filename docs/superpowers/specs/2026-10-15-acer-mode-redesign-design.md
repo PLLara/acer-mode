@@ -73,8 +73,17 @@ leitura: `SetGamingFanBehavior(0x09 | cpuModo << 16 | gpuModo << 22)` com Auto `
 Máximo `2`, Personalizado `3`, e `SetGamingFanSpeed(fan | % << 8)`. A escrita ainda é
 verificada na Fase 0 com leitura de volta.
 
-O efeito `0` (estático) com cores por zona é o único comportamento de iluminação já
-validado por escrita. Os eventos `08 …` e `09 …` também chegam pelo `APGeEvent` e hoje são ignorados.
+**Confirmado por escrita em 2026-10-15** (`tools/verify-writes.ps1`, modo Turbo):
+
+- `SetGamingKBBacklight` aceitou (status `0`) os 8 efeitos, códigos `0–7`, com velocidade 5,
+  brilho 100, direção 1. Todos ficam visíveis na interface; a confirmação visual de cada
+  um entra no checklist final (§9).
+- `SetGamingFanBehavior` com Máximo (`0x00820009`) leu de volta `0x8200` e levou as ventoinhas
+  a 7692/7142 rpm. Personalizado 60/60 (`SetGamingFanSpeed 0x3C01`/`0x3C04` + `0x00C30009`)
+  leu de volta `0xC300` e estabilizou perto de 6000 rpm. Auto (`0x00410009`) leu `0x4100`.
+- Observação: em Turbo, com carga, a CPU chegou a 100 °C e a GPU a 89 °C. Com o limite
+  de 85 °C do `FanGuard`, Personalizado em Turbo sob carga volta ao Auto com frequência.
+  É o comportamento esperado. Os eventos `08 …` e `09 …` também chegam pelo `APGeEvent` e hoje são ignorados.
 Não se sabe o que significam, e eles continuam ignorados (o novo log de eventos registra
 cada um para investigação futura).
 

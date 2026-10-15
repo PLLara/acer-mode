@@ -1,5 +1,4 @@
 using System.Windows;
-using System.Windows.Controls;
 using AcerMode.App.ViewModels;
 
 namespace AcerMode.App.Pages;
@@ -22,6 +21,9 @@ public static class PageFactory
     {
         "modos" => new ModesPage { DataContext = vm.Modes },
         "iluminacao" => new LightingPage(vm.Lighting),
-        _ => new TextBlock { Text = "Em construção", Foreground = (System.Windows.Media.Brush)Application.Current.FindResource("Text2Brush") },
+        "sistema" => new SystemPage(vm.System),
+        "ventoinhas" => new FansPage(vm.Fans),
+        "ajustes" => new SettingsPage(vm.Settings),
+        _ => throw new ArgumentOutOfRangeException(nameof(key), key, "Página desconhecida."),
     };
 }

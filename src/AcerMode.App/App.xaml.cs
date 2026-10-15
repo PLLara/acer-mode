@@ -72,12 +72,26 @@ public partial class App : Application
         }
 
         SystemEvents.PowerModeChanged += OnPower;
+        var vmRef = comp.Vm;
         state.Sensors.GuardTriggered += async (action, reading) =>
         {
             state.Log.Write("FanGuard: " + action);
             try { await state.Modes.RevertFansToAutoAsync(); }
             catch (HardwareException ex) { state.Log.Write("FanGuard falhou: " + ex.Message); }
-            AppState.Ui(() => state.Banner = FanGuard.Message(action, reading));
+            AppState.Ui(() =>
+            {
+                // Personalizado só volta quando a pessoa escolher de novo: o perfil passa a Auto.
+                if (state.ActiveMode is { } m)
+                {
+                    var p = state.Settings.Profile(m);
+                    p.Fans = p.Fans with { Mode = FanMode.Auto };
+                    state.SaveSettings();
+                    state.NotifyProfilesChanged();
+                }
+                var msg = FanGuard.Message(action, reading);
+                state.Banner = msg;
+                vmRef.Fans.ReportGuard(msg);
+            });
         };
         state.Sensors.Start();
 

@@ -132,6 +132,9 @@ public partial class ShellWindow : Window
     {
         base.OnKeyDown(e);
         if (e.Key == Key.Escape) HideAnimated();
+        // Só na demonstração: Ctrl+Shift+H simula 90 °C para testar a proteção das ventoinhas.
+        if (e.Key == Key.H && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && vm.State.Hardware is Core.FakeHardware fake)
+            fake.NextReading = new Core.SensorReading(90, 80, 50, 4000, 3800, DateTime.Now);
     }
 
     // Fechar (Alt+F4) só esconde; "Sair" na bandeja encerra de verdade.

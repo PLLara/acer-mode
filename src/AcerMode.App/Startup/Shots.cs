@@ -26,8 +26,13 @@ public static class Shots
         var hw = new FakeHardware();
         await hw.SetModeAsync(mode);
         var comp = await Composition.CreateAsync(hw, demo: true);
-        comp.State.Latest = await hw.ReadSensorsAsync();
-        for (int i = 0; i < 40; i++) comp.State.Sensors.History.Add(await hw.ReadSensorsAsync() with { CpuTempC = 70 + (int)(8 * Math.Sin(i / 4.0)), GpuTempC = 60 + (int)(6 * Math.Sin(i / 5.0 + 1)) });
+        if (target == "ventoinhas")
+        {
+            comp.State.Settings.Profile(mode).Fans = new FanSettings(FanMode.Custom, 55, 65);
+            comp.State.NotifyProfilesChanged();
+        }
+        for (int i = 0; i < 90; i++) comp.State.Sensors.History.Add(await hw.ReadSensorsAsync() with { CpuTempC = 70 + (int)(8 * Math.Sin(i / 9.0)), GpuTempC = 60 + (int)(6 * Math.Sin(i / 12.0 + 1)) });
+        comp.State.Latest = comp.State.Sensors.History.Latest;
 
         FrameworkElement root;
         Size size;

@@ -1,0 +1,92 @@
+<UserControl x:Class="AcerMode.App.Pages.FansPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:AcerMode.App.Controls">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="Vis"/>
+        <Style x:Key="FanChip" TargetType="ListBoxItem" BasedOn="{StaticResource ChipItem}">
+            <Setter Property="IsEnabled" Value="{Binding Enabled}"/>
+            <Setter Property="ToolTipService.ShowOnDisabled" Value="True"/>
+        </Style>
+    </UserControl.Resources>
+    <Grid Margin="0,0,12,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <DockPanel Margin="0,0,0,10">
+            <TextBlock Text="Perfil" Foreground="{StaticResource Text2Brush}" FontSize="12" VerticalAlignment="Top" Margin="0,7,12,0"/>
+            <ListBox Style="{StaticResource ChipList}" ItemsSource="{Binding Modes}" SelectedItem="{Binding EditingMode}"/>
+        </DockPanel>
+
+        <Border Grid.Row="1" Style="{StaticResource Card}" Padding="18,16" Margin="0,0,0,14">
+            <StackPanel>
+                <TextBlock Text="COMPORTAMENTO" Style="{StaticResource SectionLabel}"/>
+                <ListBox Style="{StaticResource ChipList}" ItemsSource="{Binding Options}" DisplayMemberPath="Label"
+                         SelectedValuePath="Mode" SelectedValue="{Binding Mode}" ItemContainerStyle="{StaticResource FanChip}"/>
+                <TextBlock Text="Personalizado precisa de leitura de temperatura, que está indisponível agora."
+                           Foreground="{StaticResource WarningBrush}" Margin="0,2,0,0">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource Muted}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding CustomAvailable}" Value="False">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </StackPanel>
+        </Border>
+
+        <!-- sliders, só no Personalizado -->
+        <Border Grid.Row="2" Style="{StaticResource Card}" Padding="18,16" Margin="0,0,0,14"
+                Visibility="{Binding IsCustom, Converter={StaticResource Vis}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="60"/>
+                    <ColumnDefinition Width="110"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="40"/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="Ventoinha da CPU" VerticalAlignment="Center"/>
+                <Slider Grid.Column="1" Minimum="30" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True" Value="{Binding CpuPercent}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="2" Text="{Binding CpuPercent, StringFormat={}{0:0}%}" HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <c:AnimatedNumber Value="{Binding CpuRpm}" Foreground="{StaticResource Text2Brush}"/>
+                    <TextBlock Text=" rpm" Foreground="{StaticResource Text3Brush}"/>
+                </StackPanel>
+
+                <TextBlock Grid.Row="1" Text="Ventoinha da GPU" VerticalAlignment="Center"/>
+                <Slider Grid.Row="1" Grid.Column="1" Minimum="30" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True" Value="{Binding GpuPercent}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding GpuPercent, StringFormat={}{0:0}%}" HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                <StackPanel Grid.Row="1" Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <c:AnimatedNumber Value="{Binding GpuRpm}" Foreground="{StaticResource Text2Brush}"/>
+                    <TextBlock Text=" rpm" Foreground="{StaticResource Text3Brush}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- proteção -->
+        <Border Grid.Row="3" CornerRadius="12" BorderThickness="1" BorderBrush="{StaticResource BorderBrush}" Padding="18,14" VerticalAlignment="Top">
+            <DockPanel>
+                <c:Icon DockPanel.Dock="Left" Data="{StaticResource Icon.Alert}" Foreground="{StaticResource Text2Brush}" Margin="0,0,14,0" VerticalAlignment="Top"/>
+                <StackPanel>
+                    <TextBlock Text="Proteção térmica" FontWeight="SemiBold"/>
+                    <TextBlock Style="{StaticResource Muted}" Margin="0,2,0,0"
+                               Text="Personalizado volta sozinho ao automático se a CPU ou a GPU passarem de 85 °C. Só volta ao Personalizado quando você escolher de novo."/>
+                    <TextBlock Text="{Binding GuardStatus}" Foreground="{StaticResource WarningBrush}" FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding LiveHint}" Style="{StaticResource Muted}" Foreground="{StaticResource Text3Brush}" Margin="0,6,0,0"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

@@ -24,6 +24,21 @@
                     </StackPanel>
                 </CheckBox>
                 <Border Height="1" Background="{StaticResource BorderBrush}"/>
+                <StackPanel Margin="0,10">
+                    <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding CpuCapEnabled}">
+                        <StackPanel>
+                            <TextBlock Text="Teto de frequência da CPU"/>
+                            <TextBlock Text="{Binding CpuCapStatus}" Style="{StaticResource Muted}"/>
+                        </StackPanel>
+                    </CheckBox>
+                    <DockPanel Margin="0,8,0,0" IsEnabled="{Binding CpuCapEnabled}">
+                        <TextBlock DockPanel.Dock="Right" Width="86" TextAlignment="Right" VerticalAlignment="Center" FontWeight="SemiBold"
+                                   Text="{Binding CpuCapMhz, StringFormat={}{0:N0} MHz, ConverterCulture=pt-BR}"/>
+                        <Slider Minimum="{Binding CpuCapMin}" Maximum="{Binding CpuCapMax}" TickFrequency="100" IsSnapToTickEnabled="True"
+                                SmallChange="100" LargeChange="500" Value="{Binding CpuCapMhz}" VerticalAlignment="Center"/>
+                    </DockPanel>
+                </StackPanel>
+                <Border Height="1" Background="{StaticResource BorderBrush}"/>
                 <DockPanel Margin="0,10">
                     <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Command="{Binding RestoreCommand}"
                             BorderThickness="1" Padding="12,7">

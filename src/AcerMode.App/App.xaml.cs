@@ -21,6 +21,7 @@ public partial class App : Application
     Composition? comp;
     ShellWindow? shell;
     TrayFlyout? flyout;
+    System.Windows.Threading.DispatcherTimer? cpuCapTimer;
     OsdWindow? osd;
     Tray? tray;
 
@@ -119,6 +120,11 @@ public partial class App : Application
         };
         state.Sensors.Start();
 
+        // Vigia do teto da CPU: a cada 5 min, como o antigo CpuFreqCapWatchdog.
+        cpuCapTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMinutes(5) };
+        cpuCapTimer.Tick += async (_, _) => await state.EnforceCpuCapAsync();
+        cpuCapTimer.Start();
+
         shell = new ShellWindow(comp.Vm);
         flyout = new TrayFlyout(comp.Vm, page => { ShowShell(); shell.Navigate(page); });
         osd = new OsdWindow();
@@ -146,6 +152,7 @@ public partial class App : Application
         await Task.Delay(3000);
         try
         {
+            await comp.State.EnforceCpuCapAsync();
             var w = await comp.State.Modes.ReapplyActiveAsync();
             comp.State.Log.Write("retomada: perfil reaplicado");
             if (w.Count > 0) AppState.Ui(() => comp.State.Banner = string.Join(" ", w));
@@ -196,7 +203,8 @@ public sealed class Composition
         AppState? stateRef = null;
         var modes = new ModeService(hw, () => stateRef?.Settings ?? settings, dirty, log);
         var sensors = new SensorMonitor(hw, () => modes.ActiveFans);
-        var state = stateRef = new AppState(hw, modes, sensors, store, settings, log, demo, dir);
+        var cpuCap = new CpuCapService(demo ? new FakePowerConfig() : new PowerCfg(), log);
+        var state = stateRef = new AppState(hw, modes, sensors, store, settings, log, demo, dir, cpuCap);
 
         log.Write(demo ? "iniciado (demonstração)" : "iniciado");
         var warnings = new List<string>();
@@ -213,6 +221,7 @@ public sealed class Composition
 
         try { var r = await hw.ReadSensorsAsync(); state.Latest = r; state.SensorsAvailable = r.HasTemps; }
         catch (HardwareException) { state.SensorsAvailable = false; }
+        await state.EnforceCpuCapAsync();
 
         return new Composition { State = state, Vm = new Vm(state) };
     }

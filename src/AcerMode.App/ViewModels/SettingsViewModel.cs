@@ -12,11 +12,22 @@ public sealed partial class SettingsViewModel : ObservableObject
     readonly DispatcherTimer disarm;
     bool startWithWindows;
 
+    readonly DispatcherTimer capDebounce;
+
     public SettingsViewModel(AppState state)
     {
         this.state = state;
         disarm = new DispatcherTimer { Interval = TimeSpan.FromSeconds(4) };
         disarm.Tick += (_, _) => { disarm.Stop(); RestoreArmed = false; };
+        capDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(600) };
+        capDebounce.Tick += async (_, _) => { capDebounce.Stop(); await state.EnforceCpuCapAsync(); };
+        state.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(AppState.CpuCapAppliedMhz)) OnPropertyChanged(nameof(CpuCapStatus)); };
+        state.ProfilesChanged += () =>
+        {
+            OnPropertyChanged(nameof(CpuCapEnabled));
+            OnPropertyChanged(nameof(CpuCapMhz));
+            OnPropertyChanged(nameof(CpuCapStatus));
+        };
         if (!state.IsDemo)
         {
             try { startWithWindows = Autostart.IsOn(); } catch (Exception ex) { state.Log.Write("autostart: " + ex.Message); }
@@ -49,6 +60,38 @@ public sealed partial class SettingsViewModel : ObservableObject
     {
         get => state.Settings.ShowOsd;
         set { state.Settings.ShowOsd = value; state.SaveSoon(); OnPropertyChanged(); }
+    }
+
+    // ---- teto de frequência da CPU (antigo CpuFreqCapWatchdog) ----
+    public bool CpuCapEnabled
+    {
+        get => state.Settings.CpuCap.Enabled;
+        set { UpdateCap(state.Settings.CpuCap with { Enabled = value }); OnPropertyChanged(); }
+    }
+
+    public double CpuCapMhz
+    {
+        get => state.Settings.CpuCap.Mhz;
+        set { UpdateCap(state.Settings.CpuCap with { Mhz = (int)value }); OnPropertyChanged(); }
+    }
+
+    public int CpuCapMin => CpuCapSettings.MinMhz;
+    public int CpuCapMax => CpuCapSettings.MaxMhz;
+
+    public string CpuCapStatus => state.CpuCapAppliedMhz switch
+    {
+        null => "Não foi possível ler o plano de energia.",
+        0 => "Sem limite no plano de energia agora.",
+        int mhz => $"Aplicado agora: {mhz:N0} MHz, na tomada. Reaplicado a cada 5 min se for removido.",
+    };
+
+    void UpdateCap(CpuCapSettings next)
+    {
+        state.Settings.CpuCap = next.Normalized();
+        state.SaveSoon();
+        capDebounce.Stop();
+        capDebounce.Start();
+        OnPropertyChanged(nameof(CpuCapStatus));
     }
 
     [ObservableProperty]

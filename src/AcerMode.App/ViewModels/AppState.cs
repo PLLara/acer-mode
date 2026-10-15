@@ -15,9 +15,9 @@ public sealed partial class AppState : ObservableObject
     readonly DispatcherTimer saveTimer;
 
     public AppState(IAcerHardware hardware, ModeService modes, SensorMonitor sensors, SettingsStore store,
-                    AppSettings settings, AppLog log, bool isDemo, string dataDirectory)
+                    AppSettings settings, AppLog log, bool isDemo, string dataDirectory, CpuCapService cpuCap)
     {
-        Hardware = hardware; Modes = modes; Sensors = sensors; this.store = store;
+        Hardware = hardware; Modes = modes; Sensors = sensors; this.store = store; CpuCap = cpuCap;
         Settings = settings; Log = log; IsDemo = isDemo; DataDirectory = dataDirectory;
 
         modeWriter = new LatestWins<ThermalMode>(ApplyCoreAsync);
@@ -36,6 +36,27 @@ public sealed partial class AppState : ObservableObject
     public bool IsDemo { get; }
     public string DataDirectory { get; }
     public AppSettings Settings { get; private set; }
+    public CpuCapService CpuCap { get; }
+
+    // Valor que o plano de energia tem agora (null = não deu para ler).
+    [ObservableProperty] int? cpuCapAppliedMhz;
+
+    // Reaplica o teto se foi removido (substitui o antigo CpuFreqCapWatchdog). powercfg é
+    // síncrono e leva ~100 ms, então roda fora da thread da interface.
+    public async Task EnforceCpuCapAsync()
+    {
+        var wanted = Settings.CpuCap;
+        try
+        {
+            int? now = await Task.Run(() => { CpuCap.Enforce(wanted); return CpuCap.CurrentMhz(); });
+            CpuCapAppliedMhz = now;
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
+        {
+            Log.Write("teto da CPU: " + ex.Message);
+            Banner = "Não foi possível aplicar o teto da CPU: " + ex.Message;
+        }
+    }
 
     [ObservableProperty] ThermalMode? activeMode;
     [ObservableProperty] SensorReading? latest;
@@ -91,6 +112,7 @@ public sealed partial class AppState : ObservableObject
         Settings = AppSettings.Defaults();
         SaveSettings();
         NotifyProfilesChanged();
+        await EnforceCpuCapAsync();
         try
         {
             var w = await Modes.ReapplyActiveAsync();

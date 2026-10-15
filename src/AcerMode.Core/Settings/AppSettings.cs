@@ -19,6 +19,7 @@ public sealed class AppSettings
     public bool IndependentLighting { get; set; }
     public LightingProfile? GlobalLighting { get; set; }
     public bool ShowOsd { get; set; } = true;
+    public CpuCapSettings CpuCap { get; set; } = new();
     public Dictionary<ThermalMode, ModeProfile> Profiles { get; set; } = new();
 
     // Campos de versões futuras sobrevivem a um load/save.
@@ -71,5 +72,6 @@ public sealed class AppSettings
             p.Fans = (p.Fans ?? new FanSettings()).Normalized();
         }
         GlobalLighting = GlobalLighting?.Normalized();
+        CpuCap = (CpuCap ?? new CpuCapSettings()).Normalized();
     }
 }

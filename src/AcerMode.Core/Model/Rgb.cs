@@ -23,10 +23,13 @@ public readonly record struct Rgb(byte R, byte G, byte B)
 }
 
 // Cores ficam legíveis no settings.json ("#FF2D0A").
+// Cor ausente ou inválida vira branco, em vez de invalidar o arquivo inteiro.
 public sealed class RgbJsonConverter : JsonConverter<Rgb>
 {
+    public override bool HandleNull => true;
+
     public override Rgb Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
-        Rgb.TryFromHex(reader.GetString(), out var c) ? c : throw new JsonException("Cor inválida");
+        reader.TokenType == JsonTokenType.String && Rgb.TryFromHex(reader.GetString(), out var c) ? c : new Rgb(255, 255, 255);
 
     public override void Write(Utf8JsonWriter writer, Rgb value, JsonSerializerOptions options) =>
         writer.WriteStringValue(value.ToHex());

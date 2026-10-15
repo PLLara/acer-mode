@@ -7,6 +7,8 @@ public sealed class ModeProfile
 {
     public LightingProfile Lighting { get; set; } = new();
     public FanSettings Fans { get; set; } = new();
+
+    [JsonExtensionData] public Dictionary<string, JsonElement>? Extra { get; set; }
 }
 
 public sealed class AppSettings
@@ -45,7 +47,7 @@ public sealed class AppSettings
 
     public ModeProfile Profile(ThermalMode m)
     {
-        if (!Profiles.TryGetValue(m, out var p)) Profiles[m] = p = DefaultProfile(m);
+        if (!Profiles.TryGetValue(m, out var p) || p is null) Profiles[m] = p = DefaultProfile(m);
         return p;
     }
 

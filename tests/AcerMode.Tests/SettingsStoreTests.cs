@@ -69,6 +69,55 @@ public class SettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public void NullProfile_IsReplacedByDefault()
+    {
+        File.WriteAllText(FilePath, """{ "profiles": { "Turbo": null } }""");
+        var (s, warning) = new SettingsStore(FilePath).Load();
+        Assert.Null(warning);
+        Assert.Equal("#FF2D0A", s.Profile(ThermalMode.Turbo).Lighting.Color.ToHex());
+    }
+
+    [Fact]
+    public void UnreadableFile_GivesDefaultsWithWarning()
+    {
+        File.WriteAllText(FilePath, "{}");
+        using var lockIt = new FileStream(FilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        var (s, warning) = new SettingsStore(FilePath).Load();
+        Assert.NotNull(warning);
+        Assert.Equal(5, s.Profiles.Count);
+    }
+
+    [Fact]
+    public void UnknownEnumValuesAndKeys_LoadWithDefaults()
+    {
+        File.WriteAllText(FilePath, """
+        { "profiles": {
+            "Overclock": { "fans": { "mode": "Auto" } },
+            "Turbo": { "lighting": { "effect": "Rainbow", "direction": "Diagonal", "zones": ["#FF0000", null, "#00FF00", "#0000FF"] },
+                       "fans": { "mode": "Curve", "cpuPercent": 70 } } } }
+        """);
+        var (s, warning) = new SettingsStore(FilePath).Load();
+        Assert.Null(warning);
+        var turbo = s.Profile(ThermalMode.Turbo);
+        Assert.Equal(KbEffect.Static, turbo.Lighting.Effect);
+        Assert.Equal(KbDirection.RightToLeft, turbo.Lighting.Direction);
+        Assert.Equal(new Rgb(255, 0, 0), turbo.Lighting.Zones[0]);
+        Assert.Equal(FanMode.Auto, turbo.Fans.Mode);
+        Assert.Equal(70, turbo.Fans.CpuPercent);
+        Assert.Equal(5, s.Profiles.Count);
+    }
+
+    [Fact]
+    public void UnknownFieldsInsideProfile_ArePreserved()
+    {
+        File.WriteAllText(FilePath, """{ "profiles": { "Eco": { "futureProfileThing": 7 } } }""");
+        var store = new SettingsStore(FilePath);
+        var (s, _) = store.Load();
+        store.Save(s);
+        Assert.Contains("futureProfileThing", File.ReadAllText(FilePath));
+    }
+
+    [Fact]
     public void IndependentLighting_StartsAsCopyOfActive()
     {
         var s = AppSettings.Defaults();

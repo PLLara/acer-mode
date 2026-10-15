@@ -12,7 +12,7 @@ public sealed class SettingsStore
     {
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        Converters = { new JsonStringEnumConverter(), new RgbJsonConverter() },
+        Converters = { new TolerantEnumConverterFactory(), new RgbJsonConverter() },
     };
 
     readonly string path;
@@ -27,10 +27,16 @@ public sealed class SettingsStore
             s.Normalize();
             return (s, null);
         }
-        catch (Exception ex) when (ex is JsonException or NotSupportedException or FormatException or InvalidOperationException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Arquivo preso por antivírus/backup no logon: usa os padrões sem mexer no arquivo.
+            return (AppSettings.Defaults(), "Não foi possível ler as configurações (" + ex.Message + "). Usando os padrões.");
+        }
+        catch (Exception ex) when (ex is JsonException or NotSupportedException or FormatException or InvalidOperationException or ArgumentException)
         {
             var bad = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(path)!, $"settings.bad-{DateTime.Now:yyyyMMdd-HHmmss}.json");
-            File.Move(path, bad, overwrite: true);
+            try { File.Move(path, bad, overwrite: true); }
+            catch (Exception moveEx) when (moveEx is IOException or UnauthorizedAccessException) { }
             return (AppSettings.Defaults(), "As configurações estavam corrompidas e foram restauradas. Cópia salva em " + System.IO.Path.GetFileName(bad) + ".");
         }
     }

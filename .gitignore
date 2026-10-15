@@ -13,3 +13,7 @@ last-status.txt
 graft/.cache/
 graft/.graph/
 design/**/graft/
+
+# superpowers execution workspace
+.superpowers/
+publish/

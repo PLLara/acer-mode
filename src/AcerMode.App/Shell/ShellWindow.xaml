@@ -1,0 +1,86 @@
+<Window x:Class="AcerMode.App.Shell.ShellWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="clr-namespace:AcerMode.App.Controls"
+        Title="Acer Mode" Width="880" Height="580" MinWidth="880" MinHeight="580"
+        WindowStyle="None" ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen"
+        Background="Transparent" Icon="/AcerMode.ico"
+        TextElement.FontFamily="{StaticResource UiFont}" TextElement.Foreground="{StaticResource Text1Brush}"
+        TextElement.FontSize="13" UseLayoutRounding="True">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="52" GlassFrameThickness="-1" ResizeBorderThickness="0" CornerRadius="0" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+
+    <Grid x:Name="Root" Background="{StaticResource ShellTintBrush}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="72"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- trilho -->
+        <Border Background="{StaticResource RailBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
+            <Grid x:Name="Rail">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="64"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Image Source="/AcerMode.ico" Width="30" Height="30" VerticalAlignment="Center" HorizontalAlignment="Center"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
+                <StackPanel x:Name="NavTop" Grid.Row="1" HorizontalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True">
+                    <RadioButton x:Name="NavModos" Style="{StaticResource RailButton}" Tag="{StaticResource Icon.Turbo}" GroupName="nav" ToolTip="Modos" IsChecked="True"/>
+                    <RadioButton x:Name="NavIluminacao" Style="{StaticResource RailButton}" Tag="{StaticResource Icon.Lighting}" GroupName="nav" ToolTip="Iluminação"/>
+                    <RadioButton x:Name="NavSistema" Style="{StaticResource RailButton}" Tag="{StaticResource Icon.System}" GroupName="nav" ToolTip="Sistema"/>
+                    <RadioButton x:Name="NavVentoinhas" Style="{StaticResource RailButton}" Tag="{StaticResource Icon.Fans}" GroupName="nav" ToolTip="Ventoinhas"/>
+                </StackPanel>
+                <RadioButton x:Name="NavAjustes" Grid.Row="3" Margin="0,0,0,14" HorizontalAlignment="Center" Style="{StaticResource RailButton}"
+                             Tag="{StaticResource Icon.Settings}" GroupName="nav" ToolTip="Ajustes"/>
+                <!-- indicador que desliza até o item marcado -->
+                <Canvas Grid.RowSpan="4" IsHitTestVisible="False">
+                    <Border x:Name="Indicator" Width="3" Height="20" CornerRadius="1.5" Background="{DynamicResource AccentBrush}" Canvas.Left="0">
+                        <Border.RenderTransform>
+                            <TranslateTransform x:Name="IndicatorY"/>
+                        </Border.RenderTransform>
+                    </Border>
+                </Canvas>
+            </Grid>
+        </Border>
+
+        <!-- conteúdo -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="64"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <DockPanel Margin="28,0,12,0" LastChildFill="True">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top" Margin="0,12,0,0"
+                            WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button x:Name="MinButton" Style="{StaticResource GhostButton}" Width="40" Height="32" Padding="0" ToolTip="Minimizar">
+                        <c:Icon Data="{StaticResource Icon.Minimize}" Width="16" Height="16" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                    </Button>
+                    <Button x:Name="CloseButton" Style="{StaticResource CloseButton}" Width="40" Height="32" Padding="0" ToolTip="Fechar para a bandeja">
+                        <c:Icon Data="{StaticResource Icon.Close}" Width="16" Height="16" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                    </Button>
+                </StackPanel>
+                <TextBlock x:Name="PageTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" Text="Modos"/>
+                <!-- faixa de aviso -->
+                <Border x:Name="BannerBox" Margin="20,12,12,12" CornerRadius="8" Background="{StaticResource WarningSoftBrush}"
+                        BorderBrush="#4DF5B83D" BorderThickness="1" Padding="10,0,4,0" Opacity="0" Visibility="Collapsed"
+                        HorizontalAlignment="Right" WindowChrome.IsHitTestVisibleInChrome="True">
+                    <DockPanel>
+                        <c:Icon DockPanel.Dock="Left" Data="{StaticResource Icon.Alert}" Width="16" Height="16" Foreground="{StaticResource WarningBrush}" Margin="0,0,8,0"/>
+                        <Button DockPanel.Dock="Right" x:Name="BannerClose" Style="{StaticResource GhostButton}" Padding="6" ToolTip="Dispensar">
+                            <c:Icon Data="{StaticResource Icon.Close}" Width="12" Height="12" Foreground="{StaticResource WarningBrush}"/>
+                        </Button>
+                        <TextBlock x:Name="BannerText" Foreground="{StaticResource WarningBrush}" FontSize="12" VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis" MaxWidth="460"/>
+                    </DockPanel>
+                </Border>
+            </DockPanel>
+
+            <ContentControl x:Name="PageHost" Grid.Row="1" Margin="28,4,16,16" Focusable="False"/>
+        </Grid>
+    </Grid>
+</Window>

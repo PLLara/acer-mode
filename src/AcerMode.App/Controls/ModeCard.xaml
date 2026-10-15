@@ -1,0 +1,45 @@
+<UserControl x:Class="AcerMode.App.Controls.ModeCard"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:AcerMode.App.Controls"
+             Cursor="Hand" Focusable="True" FocusVisualStyle="{x:Null}">
+    <Grid x:Name="Root" RenderTransformOrigin="0.5,0.5">
+        <Grid.RenderTransform>
+            <ScaleTransform x:Name="Scale"/>
+        </Grid.RenderTransform>
+
+        <!-- brilho do cartão ativo -->
+        <Border x:Name="Ring" CornerRadius="12" BorderThickness="1.5" Opacity="0">
+            <Border.Effect>
+                <DropShadowEffect x:Name="Glow" ShadowDepth="0" BlurRadius="26" Opacity="0.55"/>
+            </Border.Effect>
+        </Border>
+
+        <Border x:Name="Card" CornerRadius="12" Background="{StaticResource Surface1Brush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+            <Grid x:Name="Inner">
+                <Border x:Name="Tint" Opacity="0"/>
+                <Canvas x:Name="RippleLayer" IsHitTestVisible="False"/>
+                <Grid Margin="16,14,16,14">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid>
+                        <Border x:Name="IconBadge" Width="36" Height="36" CornerRadius="10" HorizontalAlignment="Left"
+                                Background="{StaticResource Surface2Brush}">
+                            <c:Icon x:Name="ModeIcon" Data="{Binding Icon}" Width="20" Height="20" Foreground="{StaticResource Text2Brush}"/>
+                        </Border>
+                        <TextBlock x:Name="ActiveTag" Text="ATIVO" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Right"
+                                   VerticalAlignment="Top" Opacity="0"/>
+                    </Grid>
+                    <TextBlock Grid.Row="1" Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" Margin="0,12,0,2"/>
+                    <TextBlock Grid.Row="2" Text="{Binding Description}" Style="{StaticResource Muted}"/>
+                    <Border Grid.Row="3" Height="4" CornerRadius="2" Margin="0,12,0,0" Background="{Binding Strip}"/>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

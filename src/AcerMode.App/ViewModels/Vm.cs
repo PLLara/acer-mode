@@ -7,8 +7,10 @@ public sealed class Vm
     {
         State = state;
         Modes = new ModesViewModel(state);
+        Lighting = new LightingViewModel(state);
     }
 
     public AppState State { get; }
     public ModesViewModel Modes { get; }
+    public LightingViewModel Lighting { get; }
 }

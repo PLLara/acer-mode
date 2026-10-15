@@ -21,6 +21,7 @@ public static class PageFactory
     public static FrameworkElement Create(string key, Vm vm) => key switch
     {
         "modos" => new ModesPage { DataContext = vm.Modes },
+        "iluminacao" => new LightingPage(vm.Lighting),
         _ => new TextBlock { Text = "Em construção", Foreground = (System.Windows.Media.Brush)Application.Current.FindResource("Text2Brush") },
     };
 }

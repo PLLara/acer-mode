@@ -205,6 +205,8 @@ public sealed class Composition
         var log = new AppLog(Path.Combine(dir, prefix + "events.log"));
         var store = new SettingsStore(Path.Combine(dir, prefix + "settings.json"));
         var (settings, warning) = store.Load();
+        // Grava já a versão migrada (ex.: v1 → v2), para o arquivo refletir o que o app usa.
+        if (warning is null && !demo) { try { store.Save(settings); } catch (IOException) { } }
         var dirty = new DirtyMarker(Path.Combine(dir, prefix + "fans-dirty"));
 
         // O ModeService lê sempre as configurações atuais (Restaurar padrões troca o objeto).

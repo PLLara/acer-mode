@@ -106,6 +106,58 @@ public class ModeServiceTests
     }
 
     [Fact]
+    public async Task SmartProfile_StartsOnBiosAuto()
+    {
+        settings.Profile(ThermalMode.Turbo).Fans = new FanSettings(FanMode.Smart);
+        var svc = Svc();
+        await svc.ApplyModeAsync(ThermalMode.Turbo);
+        Assert.Equal(FanMode.Auto, hw.Fans.Mode);
+        Assert.Equal(FanMode.Smart, svc.ActiveFans.Mode);
+        Assert.False(dirty.Exists);
+    }
+
+    [Fact]
+    public async Task SmartHotReading_BoostsFans_CoolReading_HandsBackToBios()
+    {
+        settings.Profile(ThermalMode.Turbo).Fans = new FanSettings(FanMode.Smart);
+        var svc = Svc();
+        await svc.ApplyModeAsync(ThermalMode.Turbo);
+
+        await svc.OnReadingAsync(new SensorReading(95, 74, null, null, null, DateTime.Now));
+        Assert.Equal(new FanSettings(FanMode.Custom, 100, 100), hw.Fans);
+        Assert.True(dirty.Exists);
+        Assert.Equal(FanMode.Smart, svc.ActiveFans.Mode);
+
+        await svc.OnReadingAsync(new SensorReading(60, 55, null, null, null, DateTime.Now));
+        Assert.Equal(FanMode.Auto, hw.Fans.Mode);
+        Assert.False(dirty.Exists);
+    }
+
+    [Fact]
+    public async Task SmartSameOutput_DoesNotRewrite()
+    {
+        settings.Profile(ThermalMode.Turbo).Fans = new FanSettings(FanMode.Smart);
+        var svc = Svc();
+        await svc.ApplyModeAsync(ThermalMode.Turbo);
+        await svc.OnReadingAsync(new SensorReading(95, 74, null, null, null, DateTime.Now));
+        int writes = hw.Calls.Count(c => c.StartsWith("fans"));
+        await svc.OnReadingAsync(new SensorReading(96, 75, null, null, null, DateTime.Now));
+        Assert.Equal(writes, hw.Calls.Count(c => c.StartsWith("fans")));
+    }
+
+    [Fact]
+    public async Task Reading_IgnoredWhenNotSmart()
+    {
+        var svc = Svc();
+        await svc.ApplyModeAsync(ThermalMode.Turbo);   // perfil padrão do teste: Auto
+        settings.Profile(ThermalMode.Turbo).Fans = new FanSettings(FanMode.Auto);
+        await svc.ApplyFansAsync(new FanSettings(FanMode.Auto));
+        int writes = hw.Calls.Count;
+        await svc.OnReadingAsync(new SensorReading(95, 74, null, null, null, DateTime.Now));
+        Assert.Equal(writes, hw.Calls.Count);
+    }
+
+    [Fact]
     public async Task ToggleTurbo_GoesAndComesBack()
     {
         var svc = Svc();

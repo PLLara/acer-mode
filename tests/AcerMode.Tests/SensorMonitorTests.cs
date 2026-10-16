@@ -4,11 +4,12 @@ using Xunit;
 public class SensorMonitorTests
 {
     [Theory]
-    [InlineData(1, true, false, true)] [InlineData(2, true, false, true)]
-    [InlineData(1, false, false, false)] [InlineData(3, false, false, false)]
-    [InlineData(1, false, true, false)] [InlineData(3, false, true, true)] [InlineData(6, false, true, true)]
-    public void Cadence(long tick, bool visible, bool custom, bool expected) =>
-        Assert.Equal(expected, SensorMonitor.ShouldPoll(tick, visible, custom));
+    [InlineData(1, true, FanMode.Auto, true)] [InlineData(2, true, FanMode.Auto, true)]
+    [InlineData(1, false, FanMode.Auto, false)] [InlineData(3, false, FanMode.Max, false)]
+    [InlineData(1, false, FanMode.Custom, false)] [InlineData(3, false, FanMode.Custom, true)] [InlineData(6, false, FanMode.Custom, true)]
+    [InlineData(1, false, FanMode.Smart, false)] [InlineData(2, false, FanMode.Smart, true)] [InlineData(4, false, FanMode.Smart, true)]
+    public void Cadence(long tick, bool visible, FanMode mode, bool expected) =>
+        Assert.Equal(expected, SensorMonitor.ShouldPoll(tick, visible, mode));
 
     [Fact]
     public async Task HotReading_TriggersGuard()
@@ -18,7 +19,7 @@ public class SensorMonitorTests
         FanGuardAction? got = null;
         mon.GuardTriggered += (a, _) => got = a;
         await mon.TickAsync(1);
-        Assert.Equal(FanGuardAction.RevertToAuto, got);
+        Assert.Equal(FanGuardAction.SwitchToSmart, got);
         Assert.Equal(91, mon.History.Latest!.CpuTempC);
     }
 

@@ -77,6 +77,7 @@ public sealed class ModeService
         var auto = new FanSettings(FanMode.Auto, ActiveFans.CpuPercent, ActiveFans.GpuPercent);
         await hw.SetFansAsync(auto);
         ActiveFans = auto;
+        curve = FanCurveOutput.Bios;
         fansDirty.Clear();
         log?.Write("ventoinhas -> Auto");
     }
@@ -105,14 +106,45 @@ public sealed class ModeService
         return warnings;
     }
 
+    // ---- modo Inteligente ----
+    FanCurveOutput curve = FanCurveOutput.Bios;
+
+    // Cada leitura de sensor passa por aqui; só age com o Inteligente ativo e só escreve na
+    // BIOS quando a saída da curva muda.
+    public async Task OnReadingAsync(SensorReading r)
+    {
+        if (ActiveFans.Mode != FanMode.Smart) return;
+        var next = FanCurve.Next(curve, r.CpuTempC, r.GpuTempC);
+        if (next == curve) return;
+        try
+        {
+            if (next.Boost)
+            {
+                fansDirty.Set();
+                await hw.SetFansAsync(new FanSettings(FanMode.Custom, next.Percent, next.Percent));
+            }
+            else
+            {
+                await hw.SetFansAsync(new FanSettings(FanMode.Auto));
+                fansDirty.Clear();
+            }
+            if (next.Boost != curve.Boost) log?.Write(next.Boost ? $"Inteligente: assumiu ({next.Percent}%)" : "Inteligente: devolveu à BIOS");
+            curve = next;
+        }
+        catch (HardwareException ex) { log?.Write("ERRO Inteligente: " + ex.Message); }   // tenta de novo na próxima leitura
+    }
+
     async Task ApplyFansCoreAsync(FanSettings fans, List<string> warnings)
     {
         try
         {
-            if (fans.Mode == FanMode.Custom) fansDirty.Set();
-            await hw.SetFansAsync(fans);
+            // Inteligente começa com a BIOS no Auto; a curva assume na primeira leitura quente.
+            var hwFans = fans.Mode == FanMode.Smart ? fans with { Mode = FanMode.Auto } : fans;
+            if (hwFans.Mode == FanMode.Custom) fansDirty.Set();
+            await hw.SetFansAsync(hwFans);
             ActiveFans = fans;
-            if (fans.Mode != FanMode.Custom) fansDirty.Clear();
+            curve = FanCurveOutput.Bios;
+            if (hwFans.Mode != FanMode.Custom) fansDirty.Clear();
         }
         catch (Exception ex)
         {

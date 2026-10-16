@@ -26,7 +26,8 @@ public sealed partial class FansViewModel : ObservableObject
         editingMode = state.ActiveMode ?? ThermalMode.Balanced;
         Options = new[]
         {
-            new FanModeOption(FanMode.Auto, "Automático"),
+            new FanModeOption(FanMode.Smart, "Inteligente"),
+            new FanModeOption(FanMode.Auto, "Automático da BIOS"),
             new FanModeOption(FanMode.Max, "Máximo"),
             new FanModeOption(FanMode.Custom, "Personalizado"),
         };
@@ -85,17 +86,27 @@ public sealed partial class FansViewModel : ObservableObject
     partial void OnModeChanged(FanMode value)
     {
         OnPropertyChanged(nameof(IsCustom));
+        OnPropertyChanged(nameof(ModeHint));
         if (!loading) Save();
     }
 
     partial void OnCpuPercentChanged(double value) { if (!loading) Save(); }
     partial void OnGpuPercentChanged(double value) { if (!loading) Save(); }
 
+    // Inteligente e Personalizado dependem de leitura de temperatura.
     void RefreshAvailability()
     {
-        Options[2].Enabled = state.SensorsAvailable;
+        foreach (var o in Options) o.Enabled = o.Mode is not (FanMode.Smart or FanMode.Custom) || state.SensorsAvailable;
         OnPropertyChanged(nameof(CustomAvailable));
     }
+
+    public string ModeHint => Mode switch
+    {
+        FanMode.Smart => $"Até {FanCurve.StartC} °C a BIOS cuida. Acima disso o app assume: {FanCurve.StartPercent}% a {FanCurve.StartC} °C, subindo até 100% a {FanCurve.FullC} °C. Volta para a BIOS abaixo de {FanCurve.StopC} °C.",
+        FanMode.Auto => "A BIOS decide sozinha. No Turbo ela sobe pouco: a CPU pode passar de 95 °C com as ventoinhas a ~3.700 rpm.",
+        FanMode.Max => "Ventoinhas no máximo o tempo todo (~7.700 rpm). Mais frio, mais barulho.",
+        _ => "Velocidade fixa escolhida por você, protegida pelo limite de 85 °C.",
+    };
 
     void Load()
     {

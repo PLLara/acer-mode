@@ -13,7 +13,8 @@ public sealed class ModeProfile
 
 public sealed class AppSettings
 {
-    public const int CurrentVersion = 1;
+    // 2: modo Inteligente das ventoinhas (Performance/Turbo em Auto migram uma vez).
+    public const int CurrentVersion = 2;
 
     public int Version { get; set; } = CurrentVersion;
     public bool IndependentLighting { get; set; }
@@ -43,7 +44,8 @@ public sealed class AppSettings
             ThermalMode.Eco => LightingProfile.Solid(new Rgb(40, 220, 90), 70),
             _ => LightingProfile.Solid(new Rgb(40, 120, 255), 100),
         },
-        Fans = new FanSettings(),
+        // Performance e Turbo esquentam o bastante para o automático da BIOS não dar conta.
+        Fans = m is ThermalMode.Performance or ThermalMode.Turbo ? new FanSettings(FanMode.Smart) : new FanSettings(),
     };
 
     public ModeProfile Profile(ThermalMode m)
@@ -73,5 +75,14 @@ public sealed class AppSettings
         }
         GlobalLighting = GlobalLighting?.Normalized();
         CpuCap = (CpuCap ?? new CpuCapSettings()).Normalized();
+
+        // v1 → v2: o automático da BIOS não dá conta do Turbo/Performance (95 °C a ~3700 rpm).
+        // Um Auto que veio da v1 vira Inteligente; escolhas explícitas (Máximo/Personalizado) ficam.
+        if (Version < 2)
+        {
+            foreach (var m in new[] { ThermalMode.Performance, ThermalMode.Turbo })
+                if (Profile(m).Fans.Mode == FanMode.Auto) Profile(m).Fans = Profile(m).Fans with { Mode = FanMode.Smart };
+            Version = 2;
+        }
     }
 }

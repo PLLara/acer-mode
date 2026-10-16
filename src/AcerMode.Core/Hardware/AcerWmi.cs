@@ -144,6 +144,7 @@ public sealed class AcerWmi : IAcerHardware, IDisposable
     public Task SetFansAsync(FanSettings fans) => Run(() =>
     {
         var f = fans.Normalized();
+        if (f.Mode == FanMode.Smart) f = f with { Mode = FanMode.Auto };   // Inteligente é do app; a BIOS só conhece 1–3
         if (f.Mode == FanMode.Custom)
         {
             SetChecked("SetGamingFanSpeed", Encoders.FanSpeedSet(Fan.Cpu, f.CpuPercent), "a velocidade da ventoinha da CPU");

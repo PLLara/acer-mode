@@ -15,7 +15,41 @@ public class SettingsStoreTests : IDisposable
         Assert.Equal("#FF2D0A", s.Profile(ThermalMode.Turbo).Lighting.Color.ToHex());
         Assert.Equal(45, s.Profile(ThermalMode.Quiet).Lighting.Brightness);
         Assert.Equal(FanMode.Auto, s.Profile(ThermalMode.Eco).Fans.Mode);
+        Assert.Equal(FanMode.Smart, s.Profile(ThermalMode.Turbo).Fans.Mode);
+        Assert.Equal(FanMode.Smart, s.Profile(ThermalMode.Performance).Fans.Mode);
         Assert.Equal(5, s.Profiles.Count);
+    }
+
+    [Fact]
+    public void Version1_MovesHotModesFromAutoToSmart_Once()
+    {
+        File.WriteAllText(FilePath, """
+        { "version": 1, "profiles": {
+            "Turbo": { "fans": { "mode": "Auto" } },
+            "Performance": { "fans": { "mode": "Custom", "cpuPercent": 70, "gpuPercent": 70 } },
+            "Quiet": { "fans": { "mode": "Auto" } } } }
+        """);
+        var store = new SettingsStore(FilePath);
+        var (s, _) = store.Load();
+        Assert.Equal(FanMode.Smart, s.Profile(ThermalMode.Turbo).Fans.Mode);
+        Assert.Equal(FanMode.Custom, s.Profile(ThermalMode.Performance).Fans.Mode);   // escolha explícita fica
+        Assert.Equal(FanMode.Auto, s.Profile(ThermalMode.Quiet).Fans.Mode);
+        Assert.Equal(AppSettings.CurrentVersion, s.Version);
+
+        // depois de migrado, um Auto escolhido de propósito não é trocado de novo
+        s.Profile(ThermalMode.Turbo).Fans = new FanSettings(FanMode.Auto);
+        store.Save(s);
+        Assert.Equal(FanMode.Auto, store.Load().Settings.Profile(ThermalMode.Turbo).Fans.Mode);
+    }
+
+    [Fact]
+    public void SmartMode_RoundTrips()
+    {
+        var store = new SettingsStore(FilePath);
+        var s = AppSettings.Defaults();
+        s.Profile(ThermalMode.Quiet).Fans = new FanSettings(FanMode.Smart);
+        store.Save(s);
+        Assert.Equal(FanMode.Smart, store.Load().Settings.Profile(ThermalMode.Quiet).Fans.Mode);
     }
 
     [Fact]

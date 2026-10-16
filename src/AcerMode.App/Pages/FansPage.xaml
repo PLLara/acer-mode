@@ -27,7 +27,8 @@
                 <TextBlock Text="COMPORTAMENTO" Style="{StaticResource SectionLabel}"/>
                 <ListBox Style="{StaticResource ChipList}" ItemsSource="{Binding Options}" DisplayMemberPath="Label"
                          SelectedValuePath="Mode" SelectedValue="{Binding Mode}" ItemContainerStyle="{StaticResource FanChip}"/>
-                <TextBlock Text="Personalizado precisa de leitura de temperatura, que está indisponível agora."
+                <TextBlock Text="{Binding ModeHint}" Style="{StaticResource Muted}" Margin="0,2,0,0"/>
+                <TextBlock Text="Inteligente e Personalizado precisam de leitura de temperatura, que está indisponível agora."
                            Foreground="{StaticResource WarningBrush}" Margin="0,2,0,0">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock" BasedOn="{StaticResource Muted}">
@@ -82,7 +83,7 @@
                 <StackPanel>
                     <TextBlock Text="Proteção térmica" FontWeight="SemiBold"/>
                     <TextBlock Style="{StaticResource Muted}" Margin="0,2,0,0"
-                               Text="Personalizado volta sozinho ao automático se a CPU ou a GPU passarem de 85 °C. Só volta ao Personalizado quando você escolher de novo."/>
+                               Text="Personalizado passa sozinho para o Inteligente se a CPU ou a GPU passarem de 85 °C. Só volta ao Personalizado quando você escolher de novo."/>
                     <TextBlock Text="{Binding GuardStatus}" Foreground="{StaticResource WarningBrush}" FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap"/>
                     <TextBlock Text="{Binding LiveHint}" Style="{StaticResource Muted}" Foreground="{StaticResource Text3Brush}" Margin="0,6,0,0"/>
                 </StackPanel>

@@ -6,12 +6,14 @@ public class FanGuardTests
     static SensorReading R(int? cpu, int? gpu) => new(cpu, gpu, null, null, null, DateTime.Now);
     static readonly FanSettings Custom = new(FanMode.Custom, 40, 40);
 
-    [Fact] public void IgnoresNonCustom() => Assert.Equal(FanGuardAction.None, FanGuard.Evaluate(new FanSettings(FanMode.Auto), R(99, 99)));
+    [Fact] public void IgnoresAuto() => Assert.Equal(FanGuardAction.None, FanGuard.Evaluate(new FanSettings(FanMode.Auto), R(99, 99)));
+    [Fact] public void IgnoresSmart_TheCurveHandlesHeat() => Assert.Equal(FanGuardAction.None, FanGuard.Evaluate(new FanSettings(FanMode.Smart), R(99, 99)));
     [Fact] public void At85_IsFine() => Assert.Equal(FanGuardAction.None, FanGuard.Evaluate(Custom, R(85, 85)));
-    [Fact] public void Cpu86_Reverts() => Assert.Equal(FanGuardAction.RevertToAuto, FanGuard.Evaluate(Custom, R(86, 50)));
-    [Fact] public void Gpu86_Reverts() => Assert.Equal(FanGuardAction.RevertToAuto, FanGuard.Evaluate(Custom, R(50, 86)));
+    [Fact] public void Cpu86_SwitchesToSmart() => Assert.Equal(FanGuardAction.SwitchToSmart, FanGuard.Evaluate(Custom, R(86, 50)));
+    [Fact] public void Gpu86_SwitchesToSmart() => Assert.Equal(FanGuardAction.SwitchToSmart, FanGuard.Evaluate(Custom, R(50, 86)));
     [Fact] public void MissingTemps_DisablesCustom() => Assert.Equal(FanGuardAction.DisableCustom, FanGuard.Evaluate(Custom, R(null, 70)));
     [Fact] public void NoReading_DisablesCustom() => Assert.Equal(FanGuardAction.DisableCustom, FanGuard.Evaluate(Custom, null));
+    [Fact] public void SmartWithoutSensors_FallsBackToBios() => Assert.Equal(FanGuardAction.DisableCustom, FanGuard.Evaluate(new FanSettings(FanMode.Smart), null));
 
     [Fact]
     public void DirtyMarker_SetClear()

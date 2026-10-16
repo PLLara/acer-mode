@@ -1,6 +1,8 @@
 namespace AcerMode.Core;
 
-public enum FanMode : byte { Auto = 1, Max = 2, Custom = 3 }
+// Auto/Max/Custom são os códigos da BIOS. Smart (Inteligente) existe só no app: a BIOS fica
+// no Auto e o app passa para Personalizado quando esquenta (FanCurve). Nunca vai à BIOS.
+public enum FanMode : byte { Auto = 1, Max = 2, Custom = 3, Smart = 8 }
 public enum Fan : byte { Cpu = 0x01, Gpu = 0x04 }
 
 public sealed record FanSettings(FanMode Mode = FanMode.Auto, int CpuPercent = 60, int GpuPercent = 60)

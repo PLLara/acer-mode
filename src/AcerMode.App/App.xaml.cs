@@ -98,25 +98,33 @@ public partial class App : Application
 
         SystemEvents.PowerModeChanged += OnPower;
         var vmRef = comp.Vm;
+        state.Sensors.Updated += r => _ = state.Modes.OnReadingAsync(r);   // curva do Inteligente
+        bool guarding = false;
         state.Sensors.GuardTriggered += async (action, reading) =>
         {
-            state.Log.Write("FanGuard: " + action);
-            try { await state.Modes.RevertFansToAutoAsync(); }
-            catch (HardwareException ex) { state.Log.Write("FanGuard falhou: " + ex.Message); }
-            AppState.Ui(() =>
+            if (guarding) return;   // leituras seguintes chegam antes da troca terminar
+            guarding = true;
+            try
             {
-                // Personalizado só volta quando a pessoa escolher de novo: o perfil passa a Auto.
+                state.Log.Write("FanGuard: " + action);
+                // Quente: Inteligente (vai a 100 % sozinho). Sem leitura: automático da BIOS.
+                var target = action == FanGuardAction.SwitchToSmart ? FanMode.Smart : FanMode.Auto;
+                var fans = state.Modes.ActiveFans with { Mode = target };
+                var w = await state.Modes.ApplyFansAsync(fans);
+                if (target == FanMode.Smart && reading is not null) await state.Modes.OnReadingAsync(reading);
+                // Personalizado só volta quando a pessoa escolher de novo: o perfil muda junto.
                 if (state.ActiveMode is { } m)
                 {
                     var p = state.Settings.Profile(m);
-                    p.Fans = p.Fans with { Mode = FanMode.Auto };
+                    p.Fans = p.Fans with { Mode = target };
                     state.SaveSettings();
                     state.NotifyProfilesChanged();
                 }
-                var msg = FanGuard.Message(action, reading);
+                var msg = w.Count > 0 ? string.Join(" ", w) : FanGuard.Message(action, reading);
                 state.Banner = msg;
                 vmRef.Fans.ReportGuard(msg);
-            });
+            }
+            finally { guarding = false; }
         };
         state.Sensors.Start();
 
@@ -163,7 +171,7 @@ public partial class App : Application
     public async void ExitApp()
     {
         ReallyExiting = true;
-        if (comp is { } c && c.State.Modes.ActiveFans.Mode == FanMode.Custom)
+        if (comp is { } c && c.State.Modes.ActiveFans.Mode is FanMode.Custom or FanMode.Smart)
         {
             try { await c.State.Modes.RevertFansToAutoAsync().WaitAsync(TimeSpan.FromSeconds(4)); }
             catch (Exception ex) { c.State.Log.Write("saída: ventoinhas não voltaram ao Auto: " + ex.Message); }

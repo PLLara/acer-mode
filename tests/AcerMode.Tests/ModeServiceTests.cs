@@ -119,8 +119,9 @@ public class ModeServiceTests
     [Fact]
     public async Task SmartHotReading_BoostsFans_CoolReading_HandsBackToBios()
     {
+        var now = new DateTime(2026, 10, 17, 12, 0, 0);
         settings.Profile(ThermalMode.Turbo).Fans = new FanSettings(FanMode.Smart);
-        var svc = Svc();
+        var svc = new ModeService(hw, () => settings, dirty, clock: () => now);
         await svc.ApplyModeAsync(ThermalMode.Turbo);
 
         await svc.OnReadingAsync(new SensorReading(95, 74, null, null, null, DateTime.Now));
@@ -128,6 +129,11 @@ public class ModeServiceTests
         Assert.True(dirty.Exists);
         Assert.Equal(FanMode.Smart, svc.ActiveFans.Mode);
 
+        now = now.AddSeconds(5);
+        await svc.OnReadingAsync(new SensorReading(60, 55, null, null, null, DateTime.Now));
+        Assert.Equal(FanMode.Custom, hw.Fans.Mode);   // segura no mínimo 30 s antes de devolver
+
+        now = now.AddSeconds(30);
         await svc.OnReadingAsync(new SensorReading(60, 55, null, null, null, DateTime.Now));
         Assert.Equal(FanMode.Auto, hw.Fans.Mode);
         Assert.False(dirty.Exists);
@@ -143,6 +149,38 @@ public class ModeServiceTests
         int writes = hw.Calls.Count(c => c.StartsWith("fans"));
         await svc.OnReadingAsync(new SensorReading(96, 75, null, null, null, DateTime.Now));
         Assert.Equal(writes, hw.Calls.Count(c => c.StartsWith("fans")));
+    }
+
+    static SensorReading Temp(int c) => new(c, 50, null, null, null, DateTime.Now);
+
+    [Fact]
+    public async Task Smart_SpeedChangeWhileBoosted_WritesOnlySpeeds()
+    {
+        settings.Profile(ThermalMode.Turbo).Fans = new FanSettings(FanMode.Smart);
+        var svc = Svc();
+        await svc.ApplyModeAsync(ThermalMode.Turbo);
+        await svc.OnReadingAsync(Temp(70));          // assume a 55%
+        hw.Calls.Clear();
+        await svc.OnReadingAsync(Temp(72));          // alvo 60%: menos de 10, não escreve
+        Assert.Empty(hw.Calls);
+        await svc.OnReadingAsync(Temp(80));          // alvo 80%
+        Assert.Equal(new[] { "fanSpeed:80" }, hw.Calls);
+        Assert.Equal(80, hw.Fans.CpuPercent);
+    }
+
+    [Fact]
+    public async Task Smart_Drop_IsHeldFor20s()
+    {
+        var now = new DateTime(2026, 10, 17, 12, 0, 0);
+        settings.Profile(ThermalMode.Turbo).Fans = new FanSettings(FanMode.Smart);
+        var svc = new ModeService(hw, () => settings, dirty, clock: () => now);
+        await svc.ApplyModeAsync(ThermalMode.Turbo);
+        await svc.OnReadingAsync(Temp(95));          // 100%
+        hw.Calls.Clear();
+        for (int i = 0; i < 5; i++) { now = now.AddSeconds(2); await svc.OnReadingAsync(Temp(75)); }
+        Assert.Empty(hw.Calls);                      // 10 s: ainda segura
+        for (int i = 0; i < 6; i++) { now = now.AddSeconds(2); await svc.OnReadingAsync(Temp(75)); }
+        Assert.Single(hw.Calls, c => c.StartsWith("fanSpeed:"));   // depois de 20 s, uma escrita
     }
 
     [Fact]

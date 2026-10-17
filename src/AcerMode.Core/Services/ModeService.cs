@@ -12,9 +12,12 @@ public sealed class ModeService
     readonly AppLog? log;
     ThermalMode beforeTurbo = ThermalMode.Balanced;
 
-    public ModeService(IAcerHardware hw, Func<AppSettings> settings, DirtyMarker fansDirty, AppLog? log = null)
+    readonly Func<DateTime> clock;
+
+    public ModeService(IAcerHardware hw, Func<AppSettings> settings, DirtyMarker fansDirty, AppLog? log = null, Func<DateTime>? clock = null)
     {
         this.hw = hw; this.settings = settings; this.fansDirty = fansDirty; this.log = log;
+        this.clock = clock ?? (() => DateTime.Now);
     }
 
     public ThermalMode? Active { get; private set; }
@@ -77,7 +80,7 @@ public sealed class ModeService
         var auto = new FanSettings(FanMode.Auto, ActiveFans.CpuPercent, ActiveFans.GpuPercent);
         await hw.SetFansAsync(auto);
         ActiveFans = auto;
-        curve = FanCurveOutput.Bios;
+        curve = applied = FanCurveOutput.Bios;
         fansDirty.Clear();
         log?.Write("ventoinhas -> Auto");
     }
@@ -107,18 +110,23 @@ public sealed class ModeService
     }
 
     // ---- modo Inteligente ----
-    FanCurveOutput curve = FanCurveOutput.Bios;
+    FanCurveOutput curve = FanCurveOutput.Bios;     // estado da curva (anda a cada leitura)
+    FanCurveOutput applied = FanCurveOutput.Bios;   // o que está de fato na BIOS
+    DateTime lastWrite = DateTime.MinValue;
 
-    // Cada leitura de sensor passa por aqui; só age com o Inteligente ativo e só escreve na
-    // BIOS quando a saída da curva muda.
+    // Cada leitura de sensor passa por aqui; só age com o Inteligente ativo. A curva anda a cada
+    // leitura, mas a BIOS só é escrita quando a FanWritePolicy deixa (cada escrita congela núcleos).
     public async Task OnReadingAsync(SensorReading r)
     {
         if (ActiveFans.Mode != FanMode.Smart) return;
-        var next = FanCurve.Next(curve, r.CpuTempC, r.GpuTempC);
-        if (next == curve) return;
+        curve = FanCurve.Next(curve, r.CpuTempC, r.GpuTempC);
+        var next = curve;
+        if (!FanWritePolicy.ShouldWrite(applied, next, clock() - lastWrite)) return;
         try
         {
-            if (next.Boost)
+            if (next.Boost && applied.Boost)
+                await hw.SetFanSpeedsAsync(next.Percent, next.Percent);   // já em Personalizado: só o %
+            else if (next.Boost)
             {
                 fansDirty.Set();
                 await hw.SetFansAsync(new FanSettings(FanMode.Custom, next.Percent, next.Percent));
@@ -128,8 +136,9 @@ public sealed class ModeService
                 await hw.SetFansAsync(new FanSettings(FanMode.Auto));
                 fansDirty.Clear();
             }
-            if (next.Boost != curve.Boost) log?.Write(next.Boost ? $"Inteligente: assumiu ({next.Percent}%)" : "Inteligente: devolveu à BIOS");
-            curve = next;
+            if (next.Boost != applied.Boost) log?.Write(next.Boost ? $"Inteligente: assumiu ({next.Percent}%)" : "Inteligente: devolveu à BIOS");
+            applied = next;
+            lastWrite = clock();
         }
         catch (HardwareException ex) { log?.Write("ERRO Inteligente: " + ex.Message); }   // tenta de novo na próxima leitura
     }
@@ -143,7 +152,7 @@ public sealed class ModeService
             if (hwFans.Mode == FanMode.Custom) fansDirty.Set();
             await hw.SetFansAsync(hwFans);
             ActiveFans = fans;
-            curve = FanCurveOutput.Bios;
+            curve = applied = FanCurveOutput.Bios;
             if (hwFans.Mode != FanMode.Custom) fansDirty.Clear();
         }
         catch (Exception ex)

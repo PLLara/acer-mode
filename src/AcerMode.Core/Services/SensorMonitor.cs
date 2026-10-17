@@ -1,13 +1,23 @@
 namespace AcerMode.Core;
 
-// Lê sensores na cadência certa e alimenta o FanGuard.
+// Lê sensores na cadência certa e alimenta o FanGuard e a curva do Inteligente.
+// Janela aberta: leitura completa pela BIOS (temperaturas e RPM). Escondida (quando se joga):
+// só fontes baratas (Core Temp e NVML), porque cada leitura pela BIOS congela os núcleos por
+// até ~19 ms e causava stutter. Sem Core Temp, a CPU vem da BIOS no máximo a cada 10 s.
 public sealed class SensorMonitor : IDisposable
 {
+    const int BiosCpuFallbackTicks = 10;
+
     readonly IAcerHardware hw;
     readonly Func<FanSettings> activeFans;
+    readonly IFastTemps? fast;
     readonly CancellationTokenSource cts = new();
+    int? lastBiosCpu;
 
-    public SensorMonitor(IAcerHardware hw, Func<FanSettings> activeFans) { this.hw = hw; this.activeFans = activeFans; }
+    public SensorMonitor(IAcerHardware hw, Func<FanSettings> activeFans, IFastTemps? fast = null)
+    {
+        this.hw = hw; this.activeFans = activeFans; this.fast = fast;
+    }
 
     public bool UiVisible { get; set; }
     public SensorHistory History { get; } = new(120);
@@ -36,13 +46,38 @@ public sealed class SensorMonitor : IDisposable
         SensorReading? r = null;
         try
         {
-            r = await hw.ReadSensorsAsync();
-            History.Add(r);
-            Updated?.Invoke(r);
+            r = UiVisible || fast is null ? await hw.ReadSensorsAsync() : await ReadFastAsync(tick);
+            if (r.HasTemps || r.CpuTempC is not null || r.GpuTempC is not null)
+            {
+                History.Add(r);
+                Updated?.Invoke(r);
+            }
         }
         catch (HardwareException) { }
         var action = FanGuard.Evaluate(fans, r);
         if (action != FanGuardAction.None) GuardTriggered?.Invoke(action, r);
+    }
+
+    // O núcleo mais quente do Core Temp pula 60↔80 °C entre leituras (a BIOS já entrega um
+    // valor suavizado). Média móvel exponencial: constante de tempo ~7 s com leituras de 2 s.
+    const double CpuSmoothing = 0.25;
+    double? cpuEma;
+
+    async Task<SensorReading> ReadFastAsync(long tick)
+    {
+        int? cpu = fast!.CpuC();
+        if (cpu is { } raw)
+        {
+            cpuEma = cpuEma is { } e ? e + CpuSmoothing * (raw - e) : raw;
+            cpu = (int)Math.Round(cpuEma.Value);
+        }
+        else
+        {
+            // a primeira leitura não pode esperar 10 s: sem CPU o FanGuard desligaria o Inteligente
+            if (lastBiosCpu is null || tick % BiosCpuFallbackTicks == 0) lastBiosCpu = await hw.ReadCpuTempAsync();
+            cpu = lastBiosCpu;
+        }
+        return new SensorReading(cpu, fast.GpuC(), null, null, null, DateTime.Now);
     }
 
     public void Dispose() => cts.Cancel();

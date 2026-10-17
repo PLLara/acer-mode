@@ -212,7 +212,8 @@ public sealed class Composition
         // O ModeService lê sempre as configurações atuais (Restaurar padrões troca o objeto).
         AppState? stateRef = null;
         var modes = new ModeService(hw, () => stateRef?.Settings ?? settings, dirty, log);
-        var sensors = new SensorMonitor(hw, () => modes.ActiveFans);
+        // Em segundo plano, temperaturas só de fontes que não tocam a BIOS (Core Temp, NVML).
+        var sensors = new SensorMonitor(hw, () => modes.ActiveFans, demo ? null : new FastTemps());
         var cpuCap = new CpuCapService(demo ? new FakePowerConfig() : new PowerCfg(), log);
         var state = stateRef = new AppState(hw, modes, sensors, store, settings, log, demo, dir, cpuCap);
 

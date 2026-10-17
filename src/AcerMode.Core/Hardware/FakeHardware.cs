@@ -35,6 +35,18 @@ public sealed class FakeHardware : IAcerHardware
             rpm + (int)(150 * Math.Sin(t / 2)), rpm - 300 + (int)(120 * Math.Sin(t / 4)), DateTime.Now);
     }
 
+    public async Task<int?> ReadCpuTempAsync()
+    {
+        await Step("sensors", "cpuTemp");
+        return Mode == ThermalMode.Turbo ? 82 : 66;
+    }
+
     public async Task<FanState> GetFansAsync() { await Step("fans", "getFans"); return new FanState(Fans.Mode, Fans.Mode, Fans.CpuPercent, Fans.GpuPercent); }
     public async Task SetFansAsync(FanSettings f) { await Step("fans", "fans:" + f.Mode); Fans = f.Normalized(); }
+
+    public async Task SetFanSpeedsAsync(int cpuPercent, int gpuPercent)
+    {
+        await Step("fans", "fanSpeed:" + cpuPercent);
+        Fans = (Fans with { CpuPercent = cpuPercent, GpuPercent = gpuPercent }).Normalized();
+    }
 }

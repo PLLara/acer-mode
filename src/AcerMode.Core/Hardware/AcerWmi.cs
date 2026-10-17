@@ -131,6 +131,9 @@ public sealed class AcerWmi : IAcerHardware, IDisposable
             Read(Sensor.CpuFanRpm), Read(Sensor.GpuFanRpm), DateTime.Now);
     });
 
+    public Task<int?> ReadCpuTempAsync() => Run(() =>
+        SensorReading.Plausible(Sensor.CpuTemp, Encoders.SensorParse(Call("GetGamingSysInfo", Encoders.SensorQuery(Sensor.CpuTemp)))));
+
     public Task<FanState> GetFansAsync() => Run(() =>
     {
         var b = Encoders.FanBehaviorParse(Call("GetGamingFanBehavior", Encoders.BothFans))
@@ -154,6 +157,12 @@ public sealed class AcerWmi : IAcerHardware, IDisposable
         var back = Encoders.FanBehaviorParse(Call("GetGamingFanBehavior", Encoders.BothFans));
         if (back is not { } b || b.Cpu != f.Mode || b.Gpu != f.Mode)
             throw new HardwareException("A BIOS não confirmou o modo das ventoinhas.");
+    });
+
+    public Task SetFanSpeedsAsync(int cpuPercent, int gpuPercent) => Run(() =>
+    {
+        SetChecked("SetGamingFanSpeed", Encoders.FanSpeedSet(Fan.Cpu, Math.Clamp(cpuPercent, FanSettings.MinPercent, 100)), "a velocidade da ventoinha da CPU");
+        SetChecked("SetGamingFanSpeed", Encoders.FanSpeedSet(Fan.Gpu, Math.Clamp(gpuPercent, FanSettings.MinPercent, 100)), "a velocidade da ventoinha da GPU");
     });
 
     // Somente leitura: respostas cruas de todos os Get* conhecidos.

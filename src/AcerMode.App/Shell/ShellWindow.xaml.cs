@@ -35,11 +35,15 @@ public partial class ShellWindow : Window
         CloseButton.Click += (_, _) => HideAnimated();
         BannerClose.Click += (_, _) => vm.State.Banner = null;
         vm.State.PropertyChanged += OnState;
-        IsVisibleChanged += (_, _) =>
+        // Minimizada conta como escondida: leitura completa pela BIOS só com a janela na tela
+        // (cada leitura congela núcleos; com a janela minimizada a pessoa provavelmente está jogando).
+        void SyncVisible()
         {
-            App.ShellVisible = IsVisible;
-            vm.State.Sensors.UiVisible = IsVisible || App.FlyoutVisible;
-        };
+            App.ShellVisible = IsVisible && WindowState != WindowState.Minimized;
+            vm.State.Sensors.UiVisible = App.ShellVisible || App.FlyoutVisible;
+        }
+        IsVisibleChanged += (_, _) => SyncVisible();
+        StateChanged += (_, _) => SyncVisible();
         Loaded += (_, _) => MoveIndicator(animate: false);
 
         Navigate("modos");

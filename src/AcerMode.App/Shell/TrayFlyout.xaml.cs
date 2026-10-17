@@ -27,7 +27,6 @@ public partial class TrayFlyout : Window
         this.vm = vm;
         InitializeComponent();
         DataContext = new FlyoutContext(vm);
-        SourceInitialized += (_, _) => Backdrop.Apply(this, BackdropKind.Acrylic);
         Deactivated += (_, _) => HideAnimated();
         OpenButton.Click += (_, _) => { HideAnimated(); openWindowAt("modos"); };
         OpenMain.Click += (_, _) => { HideAnimated(); openWindowAt("modos"); };
@@ -54,8 +53,9 @@ public partial class TrayFlyout : Window
     {
         if (vm.State.ActiveMode is { } m && !vm.State.Settings.IndependentLighting) vm.Lighting.EditingMode = m;
         var area = SystemParameters.WorkArea;
-        Left = area.Right - Width - 12;
-        Top = area.Bottom - Height - 12;
+        // a margem de 12 px do Root já faz o respiro até a borda da área de trabalho
+        Left = area.Right - Width;
+        Top = area.Bottom - Height;
         hiding = false;
         Show();
         Activate();

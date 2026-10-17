@@ -2,21 +2,25 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:c="clr-namespace:AcerMode.App.Controls"
-        Title="Acer Mode" Width="384" Height="508" WindowStyle="None" ResizeMode="NoResize"
-        ShowInTaskbar="False" Topmost="True" Background="Transparent" ShowActivated="True"
+        Title="Acer Mode" Width="408" Height="532" WindowStyle="None" ResizeMode="NoResize"
+        ShowInTaskbar="False" Topmost="True" Background="Transparent" AllowsTransparency="True" ShowActivated="True"
         TextElement.FontFamily="{StaticResource UiFont}" TextElement.Foreground="{StaticResource Text1Brush}"
         TextElement.FontSize="13" UseLayoutRounding="True">
-    <WindowChrome.WindowChrome>
-        <WindowChrome CaptionHeight="0" GlassFrameThickness="-1" ResizeBorderThickness="0"/>
-    </WindowChrome.WindowChrome>
 
-    <Grid x:Name="Root" Background="{StaticResource ShellTintBrush}" RenderTransformOrigin="1,1">
+    <!-- O fundo é desenhado aqui dentro (e não pelo acrílico do Windows), para entrar e sair
+         junto com o conteúdo na animação. A margem de 12 px dá espaço para a sombra. -->
+    <Grid x:Name="Root" Margin="12" RenderTransformOrigin="1,1">
         <Grid.RenderTransform>
             <TransformGroup>
                 <ScaleTransform x:Name="Scale"/>
                 <TranslateTransform x:Name="Shift"/>
             </TransformGroup>
         </Grid.RenderTransform>
+        <Border CornerRadius="12" Background="#F5101319" BorderBrush="{StaticResource BorderStrongBrush}" BorderThickness="1">
+            <Border.Effect>
+                <DropShadowEffect ShadowDepth="4" BlurRadius="18" Opacity="0.45" Color="Black"/>
+            </Border.Effect>
+        </Border>
         <StackPanel Margin="18,16,18,16">
             <!-- cabeçalho -->
             <DockPanel Margin="0,0,0,14">

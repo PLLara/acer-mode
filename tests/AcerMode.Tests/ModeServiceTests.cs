@@ -159,13 +159,13 @@ public class ModeServiceTests
         settings.Profile(ThermalMode.Turbo).Fans = new FanSettings(FanMode.Smart);
         var svc = Svc();
         await svc.ApplyModeAsync(ThermalMode.Turbo);
-        await svc.OnReadingAsync(Temp(70));          // assume a 55%
+        await svc.OnReadingAsync(Temp(70));          // assume a 40%
         hw.Calls.Clear();
-        await svc.OnReadingAsync(Temp(72));          // alvo 60%: menos de 10, não escreve
+        await svc.OnReadingAsync(Temp(72));          // alvo 45%: menos de 10, não escreve
         Assert.Empty(hw.Calls);
-        await svc.OnReadingAsync(Temp(80));          // alvo 80%
-        Assert.Equal(new[] { "fanSpeed:80" }, hw.Calls);
-        Assert.Equal(80, hw.Fans.CpuPercent);
+        await svc.OnReadingAsync(Temp(80));          // alvo 60%, sobe no máximo 10 por leitura: 55%
+        Assert.Equal(new[] { "fanSpeed:55" }, hw.Calls);
+        Assert.Equal(55, hw.Fans.CpuPercent);
     }
 
     [Fact]

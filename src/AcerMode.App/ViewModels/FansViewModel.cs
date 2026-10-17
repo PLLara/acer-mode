@@ -102,7 +102,7 @@ public sealed partial class FansViewModel : ObservableObject
 
     public string ModeHint => Mode switch
     {
-        FanMode.Smart => $"Até {FanCurve.StartC} °C a BIOS cuida. Acima disso o app assume: {FanCurve.StartPercent}% a {FanCurve.StartC} °C, subindo até 100% a {FanCurve.FullC} °C. Volta para a BIOS abaixo de {FanCurve.StopC} °C.",
+        FanMode.Smart => $"Até {FanCurve.StartC} °C a BIOS cuida. Acima disso o app assume aos poucos: 40% a 70 °C, 60% a 80 °C, 80% a 88 °C e 100% a 95 °C, subindo no máximo 10% a cada 2 s (a partir de {FanCurve.EmergencyC} °C vai direto). Volta para a BIOS abaixo de {FanCurve.StopC} °C.",
         FanMode.Auto => "A BIOS decide sozinha. No Turbo ela sobe pouco: a CPU pode passar de 95 °C com as ventoinhas a ~3.700 rpm.",
         FanMode.Max => "Ventoinhas no máximo o tempo todo (~7.700 rpm). Mais frio, mais barulho.",
         _ => "Velocidade fixa escolhida por você, protegida pelo limite de 85 °C.",

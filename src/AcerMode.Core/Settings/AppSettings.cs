@@ -21,6 +21,7 @@ public sealed class AppSettings
     public LightingProfile? GlobalLighting { get; set; }
     public bool ShowOsd { get; set; } = true;
     public CpuCapSettings CpuCap { get; set; } = new();
+    public GpuOcSettings GpuOc { get; set; } = new();
     public Dictionary<ThermalMode, ModeProfile> Profiles { get; set; } = new();
 
     // Campos de versões futuras sobrevivem a um load/save.
@@ -75,6 +76,7 @@ public sealed class AppSettings
         }
         GlobalLighting = GlobalLighting?.Normalized();
         CpuCap = (CpuCap ?? new CpuCapSettings()).Normalized();
+        GpuOc = (GpuOc ?? new GpuOcSettings()).Normalized();
 
         // v1 → v2: o automático da BIOS não dá conta do Turbo/Performance (95 °C a ~3700 rpm).
         // Um Auto que veio da v1 vira Inteligente; escolhas explícitas (Máximo/Personalizado) ficam.

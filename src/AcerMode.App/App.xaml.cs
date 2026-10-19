@@ -22,6 +22,7 @@ public partial class App : Application
     ShellWindow? shell;
     TrayFlyout? flyout;
     System.Windows.Threading.DispatcherTimer? cpuCapTimer;
+    DriverResetWatcher? driverReset;
     OsdWindow? osd;
     Tray? tray;
 
@@ -99,6 +100,21 @@ public partial class App : Application
         SystemEvents.PowerModeChanged += OnPower;
         var vmRef = comp.Vm;
         state.Sensors.Updated += r => _ = state.Modes.OnReadingAsync(r);   // curva do Inteligente
+
+        // Rede de segurança do overclock: GPU acima de 85 °C ou driver de vídeo reiniciando.
+        void OcReverted(string? msg)
+        {
+            if (msg is null) return;
+            AppState.Ui(() => { state.Banner = msg; vmRef.Overclock.ReportGuard(msg); });
+        }
+        state.Sensors.Updated += r => OcReverted(state.Overclock.OnReading(r));
+        driverReset = new DriverResetWatcher();
+        driverReset.DriverReset += () => AppState.Ui(() =>
+        {
+            state.Log.Write("driver de vídeo reiniciou (evento 4101)");
+            OcReverted(state.Overclock.OnDriverReset());
+        });
+        if (!demo && !driverReset.Start()) state.Log.Write("não foi possível vigiar o evento 4101 do driver de vídeo");
         bool guarding = false;
         state.Sensors.GuardTriggered += async (action, reading) =>
         {
@@ -176,6 +192,7 @@ public partial class App : Application
             try { await c.State.Modes.RevertFansToAutoAsync().WaitAsync(TimeSpan.FromSeconds(4)); }
             catch (Exception ex) { c.State.Log.Write("saída: ventoinhas não voltaram ao Auto: " + ex.Message); }
         }
+        comp?.State.Overclock.RevertOnExit();   // overclock só vale com o app aberto
         Shutdown();
     }
 
@@ -183,6 +200,8 @@ public partial class App : Application
     {
         SystemEvents.PowerModeChanged -= OnPower;
         tray?.Dispose();
+        comp?.State.Overclock.RevertOnExit();   // desligamento do Windows também zera o OC
+        driverReset?.Dispose();
         key?.Dispose();
         comp?.State.Sensors.Dispose();
         (hardware as IDisposable)?.Dispose();
@@ -215,7 +234,10 @@ public sealed class Composition
         // Em segundo plano, temperaturas só de fontes que não tocam a BIOS (Core Temp, NVML).
         var sensors = new SensorMonitor(hw, () => modes.ActiveFans, demo ? null : new FastTemps());
         var cpuCap = new CpuCapService(demo ? new FakePowerConfig() : new PowerCfg(), log);
-        var state = stateRef = new AppState(hw, modes, sensors, store, settings, log, demo, dir, cpuCap);
+        var overclock = new OverclockService(demo ? new FakeGpuOverclock() : new NvapiGpuOverclock(),
+            new DirtyMarker(Path.Combine(dir, prefix + "oc-active")), log);
+        sensors.OverclockActive = () => overclock.Active;
+        var state = stateRef = new AppState(hw, modes, sensors, store, settings, log, demo, dir, cpuCap, overclock);
 
         log.Write(demo ? "iniciado (demonstração)" : "iniciado");
         var warnings = new List<string>();
@@ -233,6 +255,24 @@ public sealed class Composition
         try { var r = await hw.ReadSensorsAsync(); state.Latest = r; state.SensorsAvailable = r.HasTemps; }
         catch (HardwareException) { state.SensorsAvailable = false; }
         await state.EnforceCpuCapAsync();
+
+        // Overclock: não reaplica se a sessão anterior terminou com ele ligado sem fechar direito.
+        try
+        {
+            var oc = overclock.Startup(settings.GpuOc);
+            if (oc.DisabledBySafety)
+            {
+                settings.GpuOc = settings.GpuOc with { Enabled = false };
+                if (!demo) store.Save(settings);
+                warnings.Add(oc.Message!);
+            }
+        }
+        catch (HardwareException ex)
+        {
+            settings.GpuOc = settings.GpuOc with { Enabled = false };
+            warnings.Add("Overclock não aplicado: " + ex.Message);
+        }
+        if (warnings.Count > 0) state.Banner = string.Join(" ", warnings);
 
         return new Composition { State = state, Vm = new Vm(state) };
     }

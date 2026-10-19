@@ -11,7 +11,10 @@ public sealed class Vm
         System = new SystemViewModel(state);
         Fans = new FansViewModel(state);
         Settings = new SettingsViewModel(state);
+        Overclock = new OverclockViewModel(state);
     }
+
+    public OverclockViewModel Overclock { get; }
 
     public AppState State { get; }
     public ModesViewModel Modes { get; }

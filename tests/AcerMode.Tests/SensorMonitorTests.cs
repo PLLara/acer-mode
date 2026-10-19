@@ -11,6 +11,22 @@ public class SensorMonitorTests
     public void Cadence(long tick, bool visible, FanMode mode, bool expected) =>
         Assert.Equal(expected, SensorMonitor.ShouldPoll(tick, visible, mode));
 
+    // Overclock ligado precisa da temperatura da GPU mesmo com ventoinha em Auto/Máximo.
+    [Theory]
+    [InlineData(1, false)] [InlineData(2, true)] [InlineData(4, true)]
+    public void Cadence_OverclockActive_PollsEvery2s(long tick, bool expected) =>
+        Assert.Equal(expected, SensorMonitor.ShouldPoll(tick, false, FanMode.Auto, overclockActive: true));
+
+    [Fact]
+    public async Task OverclockActive_ReadsFastTempsWithFansOnAuto()
+    {
+        var hw = new FakeHardware();
+        var mon = new SensorMonitor(hw, () => new FanSettings(FanMode.Auto), new StubFast(70, 86)) { OverclockActive = () => true };
+        await mon.TickAsync(2);
+        Assert.Equal(86, mon.History.Latest!.GpuTempC);
+        Assert.DoesNotContain(hw.Calls, c => c == "sensors");
+    }
+
     [Fact]
     public async Task HotReading_TriggersGuard()
     {

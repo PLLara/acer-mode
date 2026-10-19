@@ -26,7 +26,7 @@ public partial class ShellWindow : Window
         nav = new()
         {
             ["modos"] = NavModos, ["iluminacao"] = NavIluminacao, ["sistema"] = NavSistema,
-            ["ventoinhas"] = NavVentoinhas, ["ajustes"] = NavAjustes,
+            ["ventoinhas"] = NavVentoinhas, ["overclock"] = NavOverclock, ["ajustes"] = NavAjustes,
         };
         foreach (var (key, button) in nav) button.Checked += (_, _) => Navigate(key);
 

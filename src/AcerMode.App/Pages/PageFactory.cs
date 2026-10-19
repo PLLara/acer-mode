@@ -5,7 +5,7 @@ namespace AcerMode.App.Pages;
 
 public static class PageFactory
 {
-    public static readonly string[] Keys = { "modos", "iluminacao", "sistema", "ventoinhas", "ajustes" };
+    public static readonly string[] Keys = { "modos", "iluminacao", "sistema", "ventoinhas", "overclock", "ajustes" };
 
     public static string Title(string key) => key switch
     {
@@ -13,6 +13,7 @@ public static class PageFactory
         "iluminacao" => "Iluminação",
         "sistema" => "Sistema",
         "ventoinhas" => "Ventoinhas",
+        "overclock" => "Overclock",
         "ajustes" => "Ajustes",
         _ => key,
     };
@@ -23,6 +24,7 @@ public static class PageFactory
         "iluminacao" => new LightingPage(vm.Lighting),
         "sistema" => new SystemPage(vm.System),
         "ventoinhas" => new FansPage(vm.Fans),
+        "overclock" => new OverclockPage(vm.Overclock),
         "ajustes" => new SettingsPage(vm.Settings),
         _ => throw new ArgumentOutOfRangeException(nameof(key), key, "Página desconhecida."),
     };

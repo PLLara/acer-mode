@@ -24,10 +24,14 @@ public sealed class SensorMonitor : IDisposable
     public event Action<SensorReading>? Updated;
     public event Action<FanGuardAction, SensorReading?>? GuardTriggered;
 
-    // 1 s com UI visível; escondido: 2 s no Inteligente (a curva precisa acompanhar),
-    // 3 s no Personalizado (o FanGuard precisa de leitura); nos demais, parado.
-    public static bool ShouldPoll(long tick, bool visible, FanMode mode) =>
-        visible || mode switch { FanMode.Smart => tick % 2 == 0, FanMode.Custom => tick % 3 == 0, _ => false };
+    // Overclock ligado: a proteção de 85 °C da GPU precisa de leitura em qualquer modo de ventoinha.
+    public Func<bool>? OverclockActive { get; set; }
+
+    // 1 s com UI visível; escondido: 2 s no Inteligente (a curva precisa acompanhar) ou com
+    // overclock ligado, 3 s no Personalizado (o FanGuard precisa de leitura); senão, parado.
+    public static bool ShouldPoll(long tick, bool visible, FanMode mode, bool overclockActive = false) =>
+        visible || (overclockActive && tick % 2 == 0)
+        || mode switch { FanMode.Smart => tick % 2 == 0, FanMode.Custom => tick % 3 == 0, _ => false };
 
     public void Start() => _ = LoopAsync();
 
@@ -42,7 +46,7 @@ public sealed class SensorMonitor : IDisposable
     public async Task TickAsync(long tick)
     {
         var fans = activeFans();
-        if (!ShouldPoll(tick, UiVisible, fans.Mode)) return;
+        if (!ShouldPoll(tick, UiVisible, fans.Mode, OverclockActive?.Invoke() == true)) return;
         SensorReading? r = null;
         try
         {

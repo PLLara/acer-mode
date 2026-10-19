@@ -33,6 +33,7 @@
                     <RadioButton x:Name="NavIluminacao" Style="{StaticResource RailButton}" Tag="{StaticResource Icon.Lighting}" GroupName="nav" ToolTip="Iluminação"/>
                     <RadioButton x:Name="NavSistema" Style="{StaticResource RailButton}" Tag="{StaticResource Icon.System}" GroupName="nav" ToolTip="Sistema"/>
                     <RadioButton x:Name="NavVentoinhas" Style="{StaticResource RailButton}" Tag="{StaticResource Icon.Fans}" GroupName="nav" ToolTip="Ventoinhas"/>
+                    <RadioButton x:Name="NavOverclock" Style="{StaticResource RailButton}" Tag="{StaticResource Icon.Overclock}" GroupName="nav" ToolTip="Overclock"/>
                 </StackPanel>
                 <RadioButton x:Name="NavAjustes" Grid.Row="3" Margin="0,0,0,14" HorizontalAlignment="Center" Style="{StaticResource RailButton}"
                              Tag="{StaticResource Icon.Settings}" GroupName="nav" ToolTip="Ajustes"/>

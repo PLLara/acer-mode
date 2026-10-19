@@ -9,6 +9,7 @@
     <Geometry x:Key="Icon.Lighting">M3 7H21V17H3Z M6 10H7 M9 10H10 M12 10H13 M15 10H16 M18 10H19 M7 14H17</Geometry>
     <Geometry x:Key="Icon.System">M10 13V5A2 2 0 1 1 14 5V13A4 4 0 1 1 10 13Z M12 9V16</Geometry>
     <Geometry x:Key="Icon.Fans">M12 10A2 2 0 1 0 12 14 2 2 0 1 0 12 10Z M12 10C11 6 13 3 16 4 M14 12C18 11 21 13 20 16 M12 14C13 18 11 21 8 20 M10 12C6 13 3 11 4 8</Geometry>
+    <Geometry x:Key="Icon.Overclock">M7 7H17V17H7Z M10 10H14V14H10Z M9 3V7 M15 3V7 M9 17V21 M15 17V21 M3 9H7 M3 15H7 M17 9H21 M17 15H21</Geometry>
     <Geometry x:Key="Icon.Settings">M12 9A3 3 0 1 0 12 15 3 3 0 1 0 12 9Z M12 2V5 M12 19V22 M2 12H5 M19 12H22 M4.9 4.9L7 7 M17 17L19.1 19.1 M4.9 19.1L7 17 M17 7L19.1 4.9</Geometry>
     <Geometry x:Key="Icon.Close">M6 6L18 18 M18 6L6 18</Geometry>
     <Geometry x:Key="Icon.Minimize">M5 12H19</Geometry>

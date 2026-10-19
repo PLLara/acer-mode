@@ -15,9 +15,10 @@ public sealed partial class AppState : ObservableObject
     readonly DispatcherTimer saveTimer;
 
     public AppState(IAcerHardware hardware, ModeService modes, SensorMonitor sensors, SettingsStore store,
-                    AppSettings settings, AppLog log, bool isDemo, string dataDirectory, CpuCapService cpuCap)
+                    AppSettings settings, AppLog log, bool isDemo, string dataDirectory, CpuCapService cpuCap,
+                    OverclockService overclock)
     {
-        Hardware = hardware; Modes = modes; Sensors = sensors; this.store = store; CpuCap = cpuCap;
+        Hardware = hardware; Modes = modes; Sensors = sensors; this.store = store; CpuCap = cpuCap; Overclock = overclock;
         Settings = settings; Log = log; IsDemo = isDemo; DataDirectory = dataDirectory;
 
         modeWriter = new LatestWins<ThermalMode>(ApplyCoreAsync);
@@ -37,6 +38,7 @@ public sealed partial class AppState : ObservableObject
     public string DataDirectory { get; }
     public AppSettings Settings { get; private set; }
     public CpuCapService CpuCap { get; }
+    public OverclockService Overclock { get; }
 
     // Valor que o plano de energia tem agora (null = não deu para ler).
     [ObservableProperty] int? cpuCapAppliedMhz;

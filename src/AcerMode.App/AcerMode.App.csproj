@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <Resource Include="AcerMode.ico" />
+    <Resource Include="Assets\app-icon.png" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2,13 +2,77 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:c="clr-namespace:AcerMode.App.Controls"
-        Title="Acer Mode" Width="408" Height="532" WindowStyle="None" ResizeMode="NoResize"
+        Title="Acer Mode" Width="624" Height="864" WindowStyle="None" ResizeMode="NoResize"
         ShowInTaskbar="False" Topmost="True" Background="Transparent" AllowsTransparency="True" ShowActivated="True"
-        TextElement.FontFamily="{StaticResource UiFont}" TextElement.Foreground="{StaticResource Text1Brush}"
-        TextElement.FontSize="13" UseLayoutRounding="True">
+        TextElement.FontFamily="Segoe UI" TextElement.Foreground="#F4F6F8" TextElement.FontSize="14"
+        UseLayoutRounding="True" SnapsToDevicePixels="True">
+    <Window.Resources>
+        <!-- tokens do handoff de 2026-10-21 (acer-mode-handoff/wpf/Theme.xaml) -->
+        <SolidColorBrush x:Key="P.Window" Color="#0D1216"/>
+        <SolidColorBrush x:Key="P.Surface" Color="#121A20"/>
+        <SolidColorBrush x:Key="P.Raised" Color="#19232B"/>
+        <SolidColorBrush x:Key="P.Border" Color="#303B47"/>
+        <SolidColorBrush x:Key="P.Text2" Color="#B3BDC9"/>
+        <SolidColorBrush x:Key="P.Cpu" Color="#FF5A1F"/>
+        <SolidColorBrush x:Key="P.Gpu" Color="#159EFF"/>
+        <SolidColorBrush x:Key="P.Fan" Color="#08E74B"/>
+        <BooleanToVisibilityConverter x:Key="Vis"/>
 
-    <!-- O fundo é desenhado aqui dentro (e não pelo acrílico do Windows), para entrar e sair
-         junto com o conteúdo na animação. A margem de 12 px dá espaço para a sombra. -->
+        <Style x:Key="P.Square" TargetType="Button">
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Foreground" Value="{StaticResource P.Text2}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" CornerRadius="10" Background="{StaticResource P.Raised}" BorderBrush="{StaticResource P.Border}" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#4A5866"/>
+                                <Setter Property="Foreground" Value="#F4F6F8"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- segmento de efeito -->
+        <Style x:Key="P.Segment" TargetType="ListBoxItem">
+            <Setter Property="Foreground" Value="{StaticResource P.Text2}"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd" Height="42" Margin="2" CornerRadius="21" Background="Transparent" BorderBrush="Transparent" BorderThickness="1.5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource P.Raised}"/>
+                                <Setter Property="Foreground" Value="#F4F6F8"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
     <Grid x:Name="Root" Margin="12" RenderTransformOrigin="1,1">
         <Grid.RenderTransform>
             <TransformGroup>
@@ -16,28 +80,63 @@
                 <TranslateTransform x:Name="Shift"/>
             </TransformGroup>
         </Grid.RenderTransform>
-        <Border CornerRadius="12" Background="#F5101319" BorderBrush="{StaticResource BorderStrongBrush}" BorderThickness="1">
+        <Border CornerRadius="20" Background="{StaticResource P.Window}" BorderBrush="{StaticResource P.Border}" BorderThickness="1">
             <Border.Effect>
-                <DropShadowEffect ShadowDepth="4" BlurRadius="18" Opacity="0.45" Color="Black"/>
+                <DropShadowEffect ShadowDepth="4" BlurRadius="18" Opacity="0.5" Color="Black"/>
             </Border.Effect>
         </Border>
-        <StackPanel Margin="18,16,18,16">
+
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
             <!-- cabeçalho -->
-            <DockPanel Margin="0,0,0,14">
-                <Button x:Name="OpenButton" DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Padding="8" ToolTip="Abrir Acer Mode">
-                    <c:Icon Data="{StaticResource Icon.Open}" Width="16" Height="16" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
-                </Button>
-                <Image Source="/AcerMode.ico" Width="22" Height="22" Margin="0,0,10,0" RenderOptions.BitmapScalingMode="HighQuality"/>
+            <DockPanel Height="56" Margin="0,0,0,14">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="SettingsButton" Style="{StaticResource P.Square}" Margin="0,0,10,0" ToolTip="Ajustes"
+                            AutomationProperties.Name="Abrir ajustes">
+                        <c:Icon Data="{StaticResource Icon.Gear}" Width="22" Height="22" StrokeThickness="1.6"
+                                Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                    </Button>
+                    <Button x:Name="OpenButton" Style="{StaticResource P.Square}" ToolTip="Abrir Acer Mode" AutomationProperties.Name="Abrir Acer Mode">
+                        <c:Icon Data="{StaticResource Icon.Open}" Width="22" Height="22" StrokeThickness="1.6"
+                                Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                    </Button>
+                </StackPanel>
+                <Image Source="/Assets/app-icon.png" Width="52" Height="52" Stretch="Uniform" Margin="-2,0,12,0"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
                 <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="Acer Mode" FontWeight="SemiBold"/>
-                    <TextBlock FontSize="11" Foreground="{StaticResource Text2Brush}">
-                        <Run Text="Modo"/> <Run Text="{Binding Modes.ActiveName, Mode=OneWay}" Foreground="{DynamicResource AccentBrush}"/>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Acer Mode" FontSize="26" FontWeight="SemiBold"/>
+                        <Border Visibility="{Binding State.IsDemo, Converter={StaticResource Vis}}" Margin="10,4,0,0" Padding="8,2" CornerRadius="8"
+                                Background="#29F5B83D" VerticalAlignment="Center">
+                            <TextBlock Text="Demonstração" FontSize="11" Foreground="#F5B83D"/>
+                        </Border>
+                    </StackPanel>
+                    <TextBlock FontSize="17" Foreground="{StaticResource P.Text2}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Querying}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                        <Run Text="Modo"/> <Run Text="{Binding ActiveName, Mode=OneWay}" Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold"/> <Run Text="ativo"/>
                     </TextBlock>
+                    <TextBlock Text="Consultando dispositivo…" FontSize="17" Foreground="{StaticResource P.Text2}"
+                               Visibility="{Binding Querying, Converter={StaticResource Vis}}"/>
                 </StackPanel>
             </DockPanel>
 
             <!-- modos -->
-            <ItemsControl ItemsSource="{Binding Modes.Cards}" Margin="0,0,0,16">
+            <ItemsControl Grid.Row="1" ItemsSource="{Binding Modes.Cards}" Margin="0,0,0,14" Focusable="False">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <UniformGrid Columns="5"/>
@@ -45,33 +144,44 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Button Margin="0,0,6,0" Cursor="Hand" FocusVisualStyle="{x:Null}"
+                        <Button Height="82" Margin="4,0" Cursor="Hand" FocusVisualStyle="{x:Null}"
                                 Command="{Binding DataContext.Modes.SelectCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                CommandParameter="{Binding Mode}" ToolTip="{Binding Description}">
+                                CommandParameter="{Binding Mode}" ToolTip="{Binding Description}"
+                                AutomationProperties.Name="{Binding Name}">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border x:Name="Bd" CornerRadius="10" Background="{StaticResource Surface1Brush}" BorderThickness="1"
-                                            BorderBrush="{StaticResource BorderBrush}" Padding="0,10,0,8" RenderTransformOrigin="0.5,0.5">
-                                        <StackPanel>
-                                            <c:Icon x:Name="Ic" Data="{Binding Icon}" Width="20" Height="20" Foreground="{StaticResource Text2Brush}"/>
-                                            <TextBlock Text="{Binding Name}" FontSize="10" HorizontalAlignment="Center" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"
-                                                       Foreground="{StaticResource Text2Brush}" x:Name="Tx"/>
+                                    <Border x:Name="Bd" CornerRadius="14" Background="#121A20" BorderBrush="#303B47" BorderThickness="1.5"
+                                            RenderTransformOrigin="0.5,0.5">
+                                        <StackPanel VerticalAlignment="Center">
+                                            <c:Icon x:Name="Ic" Data="{Binding Icon}" Width="30" Height="30" StrokeThickness="1.6" Foreground="#B3BDC9"/>
+                                            <TextBlock x:Name="Tx" Text="{Binding Name}" FontSize="15" HorizontalAlignment="Center" Margin="0,8,0,0"
+                                                       Foreground="#D5DCE4" TextTrimming="CharacterEllipsis"/>
                                         </StackPanel>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource BorderStrongBrush}"/>
+                                            <Setter TargetName="Bd" Property="Background" Value="#19232B"/>
+                                            <Setter TargetName="Bd" Property="BorderBrush" Value="#4A5866"/>
                                         </Trigger>
                                         <Trigger Property="IsPressed" Value="True">
                                             <Setter TargetName="Bd" Property="RenderTransform">
-                                                <Setter.Value><ScaleTransform ScaleX="0.95" ScaleY="0.95"/></Setter.Value>
+                                                <Setter.Value><ScaleTransform ScaleX="0.96" ScaleY="0.96"/></Setter.Value>
                                             </Setter>
                                         </Trigger>
+                                        <Trigger Property="IsKeyboardFocused" Value="True">
+                                            <Setter TargetName="Bd" Property="BorderBrush" Value="#F4F6F8"/>
+                                        </Trigger>
+                                        <DataTrigger Binding="{Binding IsApplying}" Value="True">
+                                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                            <Setter TargetName="Tx" Property="Text" Value="Aplicando…"/>
+                                            <Setter TargetName="Ic" Property="Opacity" Value="0.55"/>
+                                        </DataTrigger>
                                         <DataTrigger Binding="{Binding IsActive}" Value="True">
                                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
                                             <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                                             <Setter TargetName="Ic" Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-                                            <Setter TargetName="Tx" Property="Foreground" Value="{StaticResource Text1Brush}"/>
+                                            <Setter TargetName="Tx" Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                            <Setter TargetName="Tx" Property="FontWeight" Value="SemiBold"/>
                                         </DataTrigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -81,60 +191,168 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <!-- iluminação -->
-            <TextBlock Text="ILUMINAÇÃO" Style="{StaticResource SectionLabel}"/>
-            <c:KeyboardPreview x:Name="Keyboard" Height="96" Profile="{Binding Lighting.Profile}" Margin="0,0,0,12"/>
-            <WrapPanel Margin="0,0,0,6">
-                <ListBox Style="{StaticResource ChipList}" ItemsSource="{Binding QuickEffects}" DisplayMemberPath="Label"
-                         SelectedValuePath="Effect" SelectedValue="{Binding Lighting.Effect}"/>
-                <Button x:Name="MoreEffects" Style="{StaticResource GhostButton}" Padding="10,6" FontSize="12" Margin="0,0,0,6">
-                    <TextBlock Text="Mais…"/>
-                </Button>
-            </WrapPanel>
-            <ItemsControl ItemsSource="{Binding Lighting.Swatches}" Margin="0,0,0,8">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Button Style="{StaticResource Swatch}" Width="24" Height="24" Margin="0,0,10,0"
-                                Command="{Binding DataContext.Lighting.PickSwatchCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                CommandParameter="{Binding}">
-                            <Button.Background>
-                                <SolidColorBrush Color="{Binding}"/>
-                            </Button.Background>
-                        </Button>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-            <DockPanel Margin="0,0,0,16">
-                <TextBlock DockPanel.Dock="Left" Text="Brilho" Foreground="{StaticResource Text2Brush}" Width="52" VerticalAlignment="Center"/>
-                <TextBlock DockPanel.Dock="Right" Text="{Binding Lighting.Brightness, StringFormat={}{0:0}%}" Width="40" TextAlignment="Right" VerticalAlignment="Center"/>
-                <Slider Minimum="0" Maximum="100" Value="{Binding Lighting.Brightness}" VerticalAlignment="Center"/>
-            </DockPanel>
+            <!-- iluminação + monitoramento (rolam se a tela for baixa) -->
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+                <StackPanel>
+                    <Border CornerRadius="16" Background="{StaticResource P.Surface}" BorderBrush="{StaticResource P.Border}" BorderThickness="1" Padding="16">
+                        <StackPanel>
+                            <DockPanel Margin="0,-4,0,8">
+                                <Button x:Name="RgbButton" DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Padding="8,4"
+                                        AutomationProperties.Name="Abrir iluminação completa">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="RGB" FontSize="15" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                        <c:Icon Data="{StaticResource Icon.ChevronRight}" Width="16" Height="16" Margin="6,1,0,0"
+                                                Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                    </StackPanel>
+                                </Button>
+                                <TextBlock Text="Iluminação" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </DockPanel>
 
-            <!-- telemetria -->
-            <Border CornerRadius="10" Background="{StaticResource Surface1Brush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="14,10" Margin="0,0,0,14">
-                <UniformGrid Columns="3">
-                    <StackPanel>
-                        <TextBlock Text="CPU" FontSize="11" Foreground="{StaticResource Text2Brush}"/>
-                        <c:AnimatedNumber Value="{Binding State.Latest.CpuTempC}" Format="{}{0:N0} °C" FontSize="17" FontWeight="SemiBold"/>
-                    </StackPanel>
-                    <StackPanel>
-                        <TextBlock Text="GPU" FontSize="11" Foreground="{StaticResource Text2Brush}"/>
-                        <c:AnimatedNumber Value="{Binding State.Latest.GpuTempC}" Format="{}{0:N0} °C" FontSize="17" FontWeight="SemiBold"/>
-                    </StackPanel>
-                    <StackPanel>
-                        <TextBlock Text="VENTOINHA" FontSize="11" Foreground="{StaticResource Text2Brush}"/>
-                        <c:AnimatedNumber Value="{Binding State.Latest.CpuFanRpm}" Format="{}{0:N0} rpm" FontSize="17" FontWeight="SemiBold"/>
-                    </StackPanel>
-                </UniformGrid>
-            </Border>
+                            <Border Height="152" CornerRadius="12" Background="#0A0F13" Margin="0,0,0,12">
+                                <c:KeyboardPreview x:Name="Keyboard" Profile="{Binding Lighting.Profile}"/>
+                            </Border>
 
-            <Button x:Name="OpenMain" Style="{StaticResource AccentButton}" HorizontalAlignment="Stretch">
-                <TextBlock Text="Abrir Acer Mode" FontWeight="SemiBold"/>
+                            <!-- efeitos: três exclusivos + Mais (menu) -->
+                            <Border CornerRadius="24" Background="#0F161B" BorderBrush="{StaticResource P.Border}" BorderThickness="1" Padding="2" Margin="0,0,0,10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="3*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ListBox ItemsSource="{Binding MainEffects}" DisplayMemberPath="Label" SelectedValuePath="Effect"
+                                             SelectedValue="{Binding Lighting.Effect}" ItemContainerStyle="{StaticResource P.Segment}"
+                                             Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                        <ListBox.Template>
+                                            <ControlTemplate TargetType="ListBox"><ItemsPresenter/></ControlTemplate>
+                                        </ListBox.Template>
+                                        <ListBox.ItemsPanel>
+                                            <ItemsPanelTemplate><UniformGrid Columns="3"/></ItemsPanelTemplate>
+                                        </ListBox.ItemsPanel>
+                                    </ListBox>
+                                    <Button x:Name="MoreButton" Grid.Column="1" Cursor="Hand" FocusVisualStyle="{x:Null}" AutomationProperties.Name="Mais efeitos">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="Bd" Height="42" Margin="2" CornerRadius="21" Background="Transparent" BorderBrush="Transparent" BorderThickness="1.5">
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                        <TextBlock x:Name="Tx" Text="{Binding MoreLabel}" FontSize="15" Foreground="#B3BDC9" VerticalAlignment="Center"/>
+                                                        <c:Icon x:Name="Ch" Data="{StaticResource Icon.ChevronDown}" Width="16" Height="16" Margin="6,1,0,0" Foreground="#B3BDC9"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Bd" Property="Background" Value="#19232B"/>
+                                                    </Trigger>
+                                                    <DataTrigger Binding="{Binding MoreSelected}" Value="True">
+                                                        <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+                                                        <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                                        <Setter TargetName="Tx" Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                        <Setter TargetName="Ch" Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                    </DataTrigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </Grid>
+                            </Border>
+
+                            <!-- cores -->
+                            <ItemsControl ItemsSource="{Binding Swatches}" Margin="0,0,0,6" Focusable="False">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate><UniformGrid Columns="8"/></ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Width="44" Height="44" Cursor="Hand" FocusVisualStyle="{x:Null}" ToolTip="{Binding Hex}"
+                                                AutomationProperties.Name="{Binding Hex}"
+                                                Command="{Binding DataContext.PickSwatchCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Grid Background="Transparent" RenderTransformOrigin="0.5,0.5">
+                                                        <Ellipse x:Name="Ring" Width="40" Height="40" Stroke="#F4F6F8" StrokeThickness="2.5" Opacity="0"/>
+                                                        <Ellipse x:Name="Dot" Width="30" Height="30" Fill="{Binding Brush}"/>
+                                                    </Grid>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="Dot" Property="Width" Value="33"/>
+                                                            <Setter TargetName="Dot" Property="Height" Value="33"/>
+                                                        </Trigger>
+                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                            <Setter TargetName="Ring" Property="Opacity" Value="1"/>
+                                                        </DataTrigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- brilho -->
+                            <DockPanel>
+                                <c:Icon DockPanel.Dock="Left" Data="{StaticResource Icon.Sun}" Width="24" Height="24" Foreground="{StaticResource P.Text2}" Margin="2,0,12,0"/>
+                                <TextBlock DockPanel.Dock="Left" Text="Brilho" FontSize="16" Foreground="#D5DCE4" VerticalAlignment="Center" Width="62"/>
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding Lighting.Brightness, StringFormat={}{0:0}%}" FontSize="18" Width="56"
+                                           TextAlignment="Right" VerticalAlignment="Center"/>
+                                <Slider Minimum="0" Maximum="100" SmallChange="1" LargeChange="10" Value="{Binding Lighting.Brightness}" VerticalAlignment="Center"
+                                        AutomationProperties.Name="Brilho do teclado"/>
+                            </DockPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- monitoramento -->
+                    <Border CornerRadius="16" Background="{StaticResource P.Surface}" BorderBrush="{StaticResource P.Border}" BorderThickness="1"
+                            Padding="16,12,16,16" Margin="0,12,0,0">
+                        <StackPanel>
+                            <TextBlock Text="Monitoramento" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                            <UniformGrid Columns="3" Height="106">
+                                <c:TelemetryCard Margin="0,0,6,0" Title="CPU" Unit="°C" IconData="{StaticResource Icon.Cpu}" Accent="{StaticResource P.Cpu}"
+                                                 Value="{Binding Cpu}" Series="{Binding CpuSeries}" Stale="{Binding Stale}"/>
+                                <c:TelemetryCard Margin="3,0" Title="GPU" Unit="°C" IconData="{StaticResource Icon.Gpu}" Accent="{StaticResource P.Gpu}"
+                                                 Value="{Binding Gpu}" Series="{Binding GpuSeries}" Stale="{Binding Stale}"/>
+                                <c:TelemetryCard Margin="6,0,0,0" Title="Ventoinha" Unit="rpm" IconData="{StaticResource Icon.Fan}" Accent="{StaticResource P.Fan}"
+                                                 Value="{Binding Fan}" Series="{Binding FanSeries}" Stale="{Binding Stale}" AutoScale="True"
+                                                 ToolTip="Ventoinha da CPU"/>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ação principal -->
+            <Button x:Name="OpenMain" Grid.Row="3" Height="56" Margin="0,14,0,0" Cursor="Hand" FocusVisualStyle="{x:Null}"
+                    AutomationProperties.Name="Abrir Acer Mode">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Grid x:Name="G" RenderTransformOrigin="0.5,0.5">
+                            <Border CornerRadius="12" Background="{DynamicResource AccentBrush}"/>
+                            <Border CornerRadius="12">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                        <GradientStop Color="#2EFFFFFF" Offset="0"/>
+                                        <GradientStop Color="#00FFFFFF" Offset="0.6"/>
+                                        <GradientStop Color="#14000000" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                            </Border>
+                            <TextBlock Text="Abrir Acer Mode" FontSize="20" FontWeight="SemiBold" Foreground="White"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <c:Icon Data="{StaticResource Icon.ArrowRight}" Width="22" Height="22" Foreground="White" StrokeThickness="1.8"
+                                    HorizontalAlignment="Right" Margin="0,0,20,0"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="G" Property="Opacity" Value="0.92"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="G" Property="RenderTransform">
+                                    <Setter.Value><ScaleTransform ScaleX="0.985" ScaleY="0.97"/></Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
             </Button>
-        </StackPanel>
+        </Grid>
     </Grid>
 </Window>
-

@@ -49,7 +49,8 @@ public sealed partial class LightingViewModel : ObservableObject
 
     static readonly Color[] swatches = new[]
     {
-        "#FF2D0A", "#FFB020", "#28DC5A", "#00BEFF", "#2878FF", "#9646FF", "#FF3EA5", "#FFFFFF",
+        // paleta do handoff de 2026-10-21
+        "#FF4B1F", "#FFB51F", "#08E74B", "#0BB8EE", "#2374FF", "#9B48F9", "#ED309B", "#FFFFFF",
     }.Select(h => (Color)ColorConverter.ConvertFromString(h)).ToArray();
 
     public IReadOnlyList<Color> Swatches => swatches;

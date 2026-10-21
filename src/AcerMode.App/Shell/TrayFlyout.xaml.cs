@@ -1,24 +1,20 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using AcerMode.App.Theme;
 using AcerMode.App.ViewModels;
-using AcerMode.Core;
 
 namespace AcerMode.App.Shell;
 
-public sealed class FlyoutContext(Vm vm)
-{
-    public AppState State => vm.State;
-    public ModesViewModel Modes => vm.Modes;
-    public LightingViewModel Lighting => vm.Lighting;
-    public IReadOnlyList<EffectOption> QuickEffects { get; } = vm.Lighting.Effects.Take(3).ToArray();
-}
-
-// Acesso rápido acima da bandeja: modos, iluminação do modo ativo e temperaturas.
+// Painel da bandeja (handoff de 2026-10-21): modos, iluminação do modo ativo e telemetria.
 public partial class TrayFlyout : Window
 {
+    const double PreferredHeight = 864;   // 840 do painel + 12 de margem para a sombra em cima e embaixo
+
     readonly Vm vm;
+    readonly FlyoutViewModel model;
+    readonly ContextMenu moreMenu = new();
     bool hiding;
     DateTime hiddenAt;
 
@@ -26,16 +22,36 @@ public partial class TrayFlyout : Window
     {
         this.vm = vm;
         InitializeComponent();
-        DataContext = new FlyoutContext(vm);
-        Deactivated += (_, _) => HideAnimated();
-        OpenButton.Click += (_, _) => { HideAnimated(); openWindowAt("modos"); };
-        OpenMain.Click += (_, _) => { HideAnimated(); openWindowAt("modos"); };
-        MoreEffects.Click += (_, _) => { HideAnimated(); openWindowAt("iluminacao"); };
+        DataContext = model = new FlyoutViewModel(vm);
+
+        void Open(string page) { HideAnimated(); openWindowAt(page); }
+        OpenButton.Click += (_, _) => Open("modos");
+        OpenMain.Click += (_, _) => Open("modos");
+        SettingsButton.Click += (_, _) => Open("ajustes");
+        RgbButton.Click += (_, _) => Open("iluminacao");
+
+        // "Mais" abre um menu com os outros efeitos; não é um quarto efeito
+        foreach (var o in model.MoreEffects)
+        {
+            var item = new MenuItem { Header = o.Label };
+            item.Click += (_, _) => model.PickMoreCommand.Execute(o);
+            moreMenu.Items.Add(item);
+        }
+        moreMenu.Opened += (_, _) => { foreach (MenuItem mi in moreMenu.Items) mi.IsChecked = (string)mi.Header == model.MoreLabel; };
+        MoreButton.Click += (_, _) =>
+        {
+            moreMenu.PlacementTarget = MoreButton;
+            moreMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+            moreMenu.IsOpen = true;
+        };
+
+        Deactivated += (_, _) => { if (!moreMenu.IsOpen) HideAnimated(); };
         vm.Lighting.SweepRequested += Keyboard.Sweep;
         IsVisibleChanged += (_, _) =>
         {
             App.FlyoutVisible = IsVisible;
             vm.State.Sensors.UiVisible = IsVisible || App.ShellVisible;
+            model.SetVisible(IsVisible);
         };
     }
 
@@ -53,8 +69,9 @@ public partial class TrayFlyout : Window
     {
         if (vm.State.ActiveMode is { } m && !vm.State.Settings.IndependentLighting) vm.Lighting.EditingMode = m;
         var area = SystemParameters.WorkArea;
-        // a margem de 12 px do Root já faz o respiro até a borda da área de trabalho
-        Left = area.Right - Width;
+        // em tela baixa (ou escala alta) o painel encolhe e a parte do meio rola
+        Height = Math.Min(PreferredHeight, area.Height);
+        Left = area.Right - Width;   // a margem de 12 px do Root faz o respiro até a borda
         Top = area.Bottom - Height;
         hiding = false;
         Show();
@@ -70,6 +87,7 @@ public partial class TrayFlyout : Window
         if (!IsVisible || hiding) return;
         hiding = true;
         hiddenAt = DateTime.Now;
+        moreMenu.IsOpen = false;
         var fade = Motion.To(0, 140);
         fade.Completed += (_, _) => { if (hiding) { Hide(); hiding = false; } };
         Root.BeginAnimation(OpacityProperty, fade);

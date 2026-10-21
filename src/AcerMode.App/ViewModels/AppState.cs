@@ -22,7 +22,7 @@ public sealed partial class AppState : ObservableObject
         Settings = settings; Log = log; IsDemo = isDemo; DataDirectory = dataDirectory;
 
         modeWriter = new LatestWins<ThermalMode>(ApplyCoreAsync);
-        modeWriter.Error += ex => Ui(() => Banner = Friendly(ex));
+        modeWriter.Error += ex => Ui(() => { RequestedMode = null; Banner = Friendly(ex); });
 
         saveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
         saveTimer.Tick += (_, _) => { saveTimer.Stop(); SaveSettings(); };
@@ -68,7 +68,14 @@ public sealed partial class AppState : ObservableObject
     public event Action<ThermalMode>? ModeApplied;
     public event Action? ProfilesChanged;
 
-    public Task SelectModeAsync(ThermalMode mode) => modeWriter.PostAsync(mode);
+    // Modo pedido e ainda não confirmado pela BIOS (o cartão mostra "Aplicando…").
+    [ObservableProperty] ThermalMode? requestedMode;
+
+    public Task SelectModeAsync(ThermalMode mode)
+    {
+        if (mode != ActiveMode) RequestedMode = mode;
+        return modeWriter.PostAsync(mode);
+    }
 
     async Task ApplyCoreAsync(ThermalMode mode)
     {
@@ -93,6 +100,7 @@ public sealed partial class AppState : ObservableObject
     void OnApplied(ModeChangeResult r)
     {
         ActiveMode = r.Mode;
+        if (RequestedMode == r.Mode) RequestedMode = null;
         AccentManager.Apply(r.Mode, animate: true);
         Banner = r.Warnings.Count > 0 ? string.Join(" ", r.Warnings) : null;
         ModeApplied?.Invoke(r.Mode);

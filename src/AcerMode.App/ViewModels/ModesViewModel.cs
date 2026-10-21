@@ -19,6 +19,7 @@ public sealed partial class ModeCardVm : ObservableObject
     public Color Accent => AccentManager.For(Mode);
 
     [ObservableProperty] bool isActive;
+    [ObservableProperty] bool isApplying;
     [ObservableProperty] Brush strip = Brushes.Transparent;
 }
 
@@ -32,7 +33,7 @@ public sealed partial class ModesViewModel : ObservableObject
         Cards = new ObservableCollection<ModeCardVm>(ThermalModes.All.Select(m => new ModeCardVm(m)));
         state.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName == nameof(AppState.ActiveMode)) Refresh();
+            if (e.PropertyName is nameof(AppState.ActiveMode) or nameof(AppState.RequestedMode)) Refresh();
             if (e.PropertyName == nameof(AppState.Latest)) OnPropertyChanged(nameof(Telemetry));
         };
         state.ProfilesChanged += RefreshStrips;
@@ -54,7 +55,11 @@ public sealed partial class ModesViewModel : ObservableObject
 
     void Refresh()
     {
-        foreach (var c in Cards) c.IsActive = c.Mode == state.ActiveMode;
+        foreach (var c in Cards)
+        {
+            c.IsActive = c.Mode == state.ActiveMode;
+            c.IsApplying = c.Mode == state.RequestedMode && !c.IsActive;
+        }
         OnPropertyChanged(nameof(ActiveName));
         OnPropertyChanged(nameof(ActiveDescription));
         OnPropertyChanged(nameof(ActiveIcon));
